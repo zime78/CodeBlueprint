@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CodeBlueprint</string>
+
+    <!-- Navigation -->
+    <string name="nav_patterns">패턴</string>
+    <string name="nav_architecture">아키텍처</string>
+    <string name="nav_ai">AI 추천</string>
+    <string name="nav_settings">설정</string>
+
+    <!-- Pattern Categories -->
+    <string name="category_creational">생성 패턴</string>
+    <string name="category_structural">구조 패턴</string>
+    <string name="category_behavioral">행위 패턴</string>
+
+    <!-- Common -->
+    <string name="search">검색</string>
+    <string name="search_hint">패턴 검색...</string>
+    <string name="bookmark">북마크</string>
+    <string name="share">공유</string>
+    <string name="learning_progress">학습 진도</string>
+    <string name="mark_complete">학습 완료</string>
+    <string name="run_code">실행</string>
+
+    <!-- Pattern Detail -->
+    <string name="section_purpose">목적</string>
+    <string name="section_advantages">장점</string>
+    <string name="section_disadvantages">단점</string>
+    <string name="section_use_cases">활용 예시</string>
+    <string name="section_code_example">코드 예시</string>
+    <string name="section_related_patterns">관련 패턴</string>
+    <string name="section_diagram">클래스 다이어그램</string>
+
+    <!-- Settings -->
+    <string name="settings_theme">테마</string>
+    <string name="settings_theme_system">시스템 설정</string>
+    <string name="settings_theme_light">라이트</string>
+    <string name="settings_theme_dark">다크</string>
+    <string name="settings_language">코드 언어</string>
+    <string name="settings_about">앱 정보</string>
+
+    <!-- AI Advisor -->
+    <string name="ai_advisor_title">AI 패턴 어드바이저</string>
+    <string name="ai_advisor_hint">문제 상황을 설명해 주세요...</string>
+    <string name="ai_advisor_submit">추천 받기</string>
+    <string name="ai_match_rate">%d%% 일치</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors (Material You 기반) -->
+    <color name="seed">#0066CC</color>
+
+    <!-- 기존 호환성을 위한 색상 -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
