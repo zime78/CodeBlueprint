@@ -8,7 +8,7 @@ description: GoF 디자인 패턴과 알고리즘을 현재 프로젝트에 적�
 ## 개요
 
 이 스킬은 23개 GoF(Gang of Four) 디자인 패턴과 73개 알고리즘을 현재 프로젝트에 적용하는 데 도움을 줍니다.
-프로젝트 구조를 분석하여 적합한 언어(Kotlin, Java, Swift, Python)로 코드를 생성합니다.
+프로젝트 구조를 분석하여 적합한 언어(Kotlin, Java, Swift, Python, JavaScript)로 코드를 생성합니다.
 
 ## 사용법
 
@@ -144,6 +144,7 @@ BFS로 최단 경로 찾는 코드 생성해줘
 | `*.java`, `pom.xml` | Java |
 | `*.swift`, `Package.swift` | Swift |
 | `*.py`, `requirements.txt` | Python |
+| `*.js`, `package.json` | JavaScript |
 
 ## 참조 문서
 

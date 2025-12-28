@@ -27,7 +27,7 @@ Claude Code와 연동하여 디자인 패턴 및 알고리즘 정보를 활용�
 **제공 기능:**
 - 패턴/알고리즘 목록 조회
 - 상세 정보 조회
-- 코드 예시 제공 (Kotlin, Java, Swift, Python)
+- 코드 예시 제공 (Kotlin, Java, Swift, Python, JavaScript)
 - 키워드 검색
 - 상황 기반 추천
 

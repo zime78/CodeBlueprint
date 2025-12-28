@@ -68,3 +68,86 @@ tasks.register<Delete>("cleanOutputs") {
     description = "outputs 폴더 정리"
     delete(layout.buildDirectory.dir("outputs"))
 }
+
+// ===========================================
+// Pre-built Database 생성 태스크
+// ===========================================
+
+/**
+ * Seed 데이터베이스 생성
+ *
+ * desktopApp을 --generate-seed-db 모드로 실행하여 Pre-built DB를 생성합니다.
+ * 생성된 DB는 shared/src/desktopMain/resources에 저장됩니다.
+ */
+tasks.register<JavaExec>("generateSeedDatabase") {
+    group = "database"
+    description = "Pre-built Seed 데이터베이스 생성"
+
+    dependsOn(":desktopApp:compileKotlinDesktop")
+
+    val desktopApp = project(":desktopApp")
+
+    mainClass.set("com.codeblueprint.MainKt")
+
+    doFirst {
+        // 리소스 디렉토리 생성
+        file("${rootProject.projectDir}/shared/src/desktopMain/resources").mkdirs()
+
+        // classpath 설정
+        val runtimeClasspath = desktopApp.configurations.getByName("desktopRuntimeClasspath")
+        val compiledClasses = desktopApp.layout.buildDirectory.dir("classes/kotlin/desktop/main").get().asFile
+        classpath = files(compiledClasses) + runtimeClasspath
+    }
+
+    args = listOf(
+        "--generate-seed-db",
+        "${rootProject.projectDir}/shared/src/desktopMain/resources/codeblueprint_seed.db"
+    )
+
+    doLast {
+        val seedDb = file("${rootProject.projectDir}/shared/src/desktopMain/resources/codeblueprint_seed.db")
+        if (seedDb.exists()) {
+            println("✅ Seed database generated successfully!")
+            println("   Location: ${seedDb.absolutePath}")
+            println("   Size: ${seedDb.length() / 1024} KB")
+        } else {
+            throw GradleException("Failed to generate seed database")
+        }
+    }
+}
+
+/**
+ * Android용 Seed DB 복사
+ *
+ * Desktop용으로 생성된 Seed DB를 Android assets 폴더로 복사합니다.
+ */
+tasks.register<Copy>("copySeedDbToAndroid") {
+    group = "database"
+    description = "Seed DB를 Android assets로 복사"
+
+    dependsOn("generateSeedDatabase")
+
+    from("shared/src/desktopMain/resources/codeblueprint_seed.db")
+    into("androidApp/src/main/assets/databases")
+
+    doFirst {
+        file("androidApp/src/main/assets/databases").mkdirs()
+    }
+}
+
+/**
+ * 전체 Seed DB 생성 및 배포
+ */
+tasks.register("prepareSeedDatabase") {
+    group = "database"
+    description = "모든 플랫폼용 Seed DB 생성 및 배포"
+
+    dependsOn("generateSeedDatabase", "copySeedDbToAndroid")
+
+    doLast {
+        println("✅ Seed database prepared for all platforms!")
+        println("   Desktop: shared/src/desktopMain/resources/codeblueprint_seed.db")
+        println("   Android: androidApp/src/main/assets/databases/codeblueprint_seed.db")
+        println("   iOS: Bundle에 수동 추가 필요 (Xcode에서 codeblueprint_seed.db 추가)")
+    }
+}

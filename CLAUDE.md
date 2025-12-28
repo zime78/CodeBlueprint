@@ -12,8 +12,11 @@ GoF 23개 디자인 패턴 및 73개 알고리즘 참조 앱. 개발자가 패�
 
 - 23개 GoF 디자인 패턴 (생성/구조/행위)
 - 73개 알고리즘 (9개 카테고리)
+- 5개 아키텍처 패턴 (MVC, MVP, MVVM, Clean Architecture, MVI)
+- 코드 플레이그라운드 (5개 언어: Kotlin, Java, Python, JavaScript, Swift)
 - 북마크 및 빠른 접근 (북마크된 항목을 목록 상단에 칩으로 표시)
 - 통합 검색 (패턴/알고리즘 동시 검색, 탭 UI로 결과 구분)
+- 설정 (테마, 기본 코드 언어)
 
 ## 빌드 및 실행 명령어
 
@@ -113,18 +116,28 @@ UI (Screen) → ViewModel → UseCase → Repository → SQLDelight
 
 ## 주요 화면
 
-| 화면          | 파일                                          | 설명                                       |
-| ------------- | --------------------------------------------- | ------------------------------------------ |
-| 패턴 목록     | `ui/pattern/list/PatternListScreen.kt`        | 카테고리별 패턴 목록, 북마크 빠른 접근     |
-| 패턴 상세     | `ui/pattern/detail/PatternDetailScreen.kt`    | 패턴 설명, 코드 예시, 관련 패턴            |
-| 알고리즘 목록 | `ui/algorithm/list/AlgorithmListScreen.kt`    | 카테고리별 알고리즘 목록, 북마크 빠른 접근 |
-| 알고리즘 상세 | `ui/algorithm/detail/AlgorithmDetailScreen.kt`| 알고리즘 설명, 코드 예시, 복잡도 정보      |
-| 통합 검색     | `ui/search/SearchScreen.kt`                   | 패턴/알고리즘 동시 검색, 탭 UI로 결과 구분 |
-| 북마크        | `ui/bookmarks/BookmarksScreen.kt`             | 북마크된 패턴 목록                         |
+| 화면 | 파일 | 설명 |
+| ---- | ---- | ---- |
+| 패턴 목록 | `ui/pattern/list/PatternListScreen.kt` | 카테고리별 패턴 목록, 북마크 빠른 접근 |
+| 패턴 상세 | `ui/pattern/detail/PatternDetailScreen.kt` | 패턴 설명, 코드 예시, 관련 패턴 |
+| 알고리즘 목록 | `ui/algorithm/list/AlgorithmListScreen.kt` | 카테고리별 알고리즘 목록, 북마크 빠른 접근 |
+| 알고리즘 상세 | `ui/algorithm/detail/AlgorithmDetailScreen.kt` | 알고리즘 설명, 코드 예시, 복잡도 정보 |
+| 아키텍처 목록 | `ui/architecture/list/ArchitectureListScreen.kt` | 5개 아키텍처 패턴 비교 |
+| 아키텍처 상세 | `ui/architecture/detail/ArchitectureDetailScreen.kt` | 계층 설명, 다이어그램, 비교 메트릭 |
+| 코드 플레이그라운드 | `ui/playground/CodePlaygroundScreen.kt` | 코드 편집 및 실행 시뮬레이션 |
+| 통합 검색 | `ui/search/SearchScreen.kt` | 패턴/알고리즘 동시 검색, 탭 UI로 결과 구분 |
+| 북마크 | `ui/bookmarks/BookmarksScreen.kt` | 북마크된 패턴 목록 |
+| 설정 | `ui/settings/SettingsScreen.kt` | 테마, 기본 언어 설정 |
 
-### 패턴 데이터 초기화
+### 데이터 초기화
 
-`PatternDataInitializer.initializeIfNeeded()`가 앱 시작 시 호출되어 DB에 23개 GoF 패턴 삽입.
+앱 시작 시 초기 데이터가 로드됩니다:
+
+- `PatternDataInitializer` - 23개 GoF 패턴 (DB 삽입)
+- `AlgorithmDataProvider` - 73개 알고리즘 (DB 삽입)
+- `ArchitectureDataProvider` - 5개 아키텍처 패턴 (메모리)
+
+초기화 시점:
 - Desktop: `KoinInit.kt`에서 호출
 - Android: Application 클래스에서 호출
 

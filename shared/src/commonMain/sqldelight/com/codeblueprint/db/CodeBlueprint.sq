@@ -327,3 +327,25 @@ SELECT COUNT(*) FROM CodeExampleEntity WHERE algorithm_id = ?;
 -- [READ] 모든 코드 예제 조회
 getAllCodeExamples:
 SELECT * FROM CodeExampleEntity ORDER BY pattern_id, algorithm_id, display_order;
+
+-- ===========================================
+-- 앱 메타데이터 테이블 및 쿼리
+-- ===========================================
+
+-- 앱 메타데이터 테이블 (DB 버전 관리용)
+CREATE TABLE AppMetadata (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL
+);
+
+-- 메타데이터 조회
+getMetadata:
+SELECT value FROM AppMetadata WHERE key = ?;
+
+-- 메타데이터 삽입/업데이트
+upsertMetadata:
+INSERT OR REPLACE INTO AppMetadata(key, value) VALUES (?, ?);
+
+-- 모든 메타데이터 조회
+getAllMetadata:
+SELECT * FROM AppMetadata;
