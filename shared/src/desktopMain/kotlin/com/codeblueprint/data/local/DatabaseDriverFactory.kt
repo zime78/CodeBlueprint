@@ -11,7 +11,7 @@ import java.sql.DriverManager
  */
 actual class DatabaseDriverFactory {
 
-    private val databasePath: String by lazy { getDatabasePath() }
+    private val databasePath: String by lazy { resolveDatabasePath() }
     private val databaseFile: File by lazy { File(databasePath) }
 
     /**
@@ -324,7 +324,7 @@ actual class DatabaseDriverFactory {
     /**
      * 데이터베이스 파일 경로 반환
      */
-    private fun getDatabasePath(): String {
+    private fun resolveDatabasePath(): String {
         val userHome = System.getProperty("user.home")
         val appDir = File(userHome, ".codeblueprint")
         if (!appDir.exists()) {
