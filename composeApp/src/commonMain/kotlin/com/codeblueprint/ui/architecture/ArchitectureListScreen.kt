@@ -79,20 +79,10 @@ fun ArchitectureListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (val state = uiState) {
-                is ArchitectureListUiState.Loading -> {
-                    LoadingContent()
-                }
-                is ArchitectureListUiState.Success -> {
-                    SuccessContent(
-                        architectures = state.architectures,
-                        onArchitectureClick = { component.onArchitectureClick(it) }
-                    )
-                }
-                is ArchitectureListUiState.Error -> {
-                    ErrorContent(message = state.message)
-                }
-            }
+            ArchitectureListContent(
+                uiState = uiState,
+                onArchitectureClick = { component.onArchitectureClick(it) }
+            )
         }
     }
 }
@@ -121,8 +111,26 @@ private fun ErrorContent(message: String) {
     }
 }
 
+/**
+ * 아키텍처 목록 컨텐츠 (MainScreen에서 재사용)
+ */
 @Composable
-private fun SuccessContent(
+fun ArchitectureListContent(
+    uiState: ArchitectureListUiState,
+    onArchitectureClick: (String) -> Unit
+) {
+    when (uiState) {
+        is ArchitectureListUiState.Loading -> LoadingContent()
+        is ArchitectureListUiState.Error -> ErrorContent(uiState.message)
+        is ArchitectureListUiState.Success -> ArchitectureSuccessContent(
+            architectures = uiState.architectures,
+            onArchitectureClick = onArchitectureClick
+        )
+    }
+}
+
+@Composable
+private fun ArchitectureSuccessContent(
     architectures: List<ArchitectureUiModel>,
     onArchitectureClick: (String) -> Unit
 ) {
