@@ -1,5 +1,6 @@
 package com.codeblueprint.data.local
 
+import com.codeblueprint.data.mapper.CodeExampleMapper
 import com.codeblueprint.data.mapper.PatternMapper
 import com.codeblueprint.db.CodeBlueprintDatabase
 import com.codeblueprint.domain.model.CodeExample
@@ -15,7 +16,8 @@ import com.codeblueprint.domain.model.ProgrammingLanguage
  */
 class PatternDataInitializer(
     private val database: CodeBlueprintDatabase,
-    private val patternMapper: PatternMapper
+    private val patternMapper: PatternMapper,
+    private val codeExampleMapper: CodeExampleMapper = CodeExampleMapper()
 ) {
     private val queries = database.codeBlueprintQueries
 
@@ -32,6 +34,7 @@ class PatternDataInitializer(
     private fun insertInitialPatterns() {
         val patterns = createInitialPatterns()
         patterns.forEach { pattern ->
+            // 패턴 삽입 (기존 로직 유지)
             val values = patternMapper.toEntityValues(pattern)
             queries.insertPattern(
                 id = values.id,
@@ -49,6 +52,29 @@ class PatternDataInitializer(
                 difficulty = values.difficulty,
                 frequency = values.frequency
             )
+
+            // 코드 예제를 새 테이블에 삽입
+            pattern.codeExamples.forEachIndexed { index, codeExample ->
+                val exampleValues = codeExampleMapper.toEntityValues(
+                    domain = codeExample,
+                    patternId = pattern.id,
+                    algorithmId = null,
+                    index = index
+                )
+                queries.insertCodeExample(
+                    id = exampleValues.id,
+                    pattern_id = exampleValues.patternId,
+                    algorithm_id = exampleValues.algorithmId,
+                    language = exampleValues.language,
+                    code = exampleValues.code,
+                    explanation = exampleValues.explanation,
+                    sample_input = exampleValues.sampleInput,
+                    expected_output = exampleValues.expectedOutput,
+                    display_order = exampleValues.displayOrder,
+                    created_at = exampleValues.createdAt,
+                    updated_at = exampleValues.updatedAt
+                )
+            }
         }
     }
 
@@ -129,7 +155,11 @@ fun main() {
     println(Singleton === Singleton) // true
 }
                 """.trimIndent(),
-                explanation = "Kotlin의 object 키워드를 사용한 싱글톤 구현"
+                explanation = "Kotlin의 object 키워드를 사용한 싱글톤 구현",
+                expectedOutput = """
+Hello from Singleton
+true
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -202,7 +232,10 @@ class ConcreteCreatorA : Creator() {
     override fun factoryMethod() = ConcreteProductA()
 }
                 """.trimIndent(),
-                explanation = "추상 팩토리 메서드를 통한 객체 생성 위임"
+                explanation = "추상 팩토리 메서드를 통한 객체 생성 위임",
+                expectedOutput = """
+Product A 사용
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -269,7 +302,11 @@ class WindowsFactory : GUIFactory {
     override fun createCheckbox() = WindowsCheckbox()
 }
                 """.trimIndent(),
-                explanation = "플랫폼별 UI 컴포넌트 생성을 추상화"
+                explanation = "플랫폼별 UI 컴포넌트 생성을 추상화",
+                expectedOutput = """
+Windows Button 렌더링
+Windows Checkbox 렌더링
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -327,7 +364,10 @@ data class Pizza(val dough: String, val sauce: String, val topping: String) {
     }
 }
                 """.trimIndent(),
-                explanation = "빌더 패턴을 통한 단계적 객체 생성"
+                explanation = "빌더 패턴을 통한 단계적 객체 생성",
+                expectedOutput = """
+Pizza(dough=씬 도우, sauce=바베큐, topping=페퍼로니)
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -378,7 +418,11 @@ data class Document(val title: String, val content: String) : Cloneable {
 val original = Document("제목", "내용")
 val cloned = original.clone()
                 """.trimIndent(),
-                explanation = "Kotlin data class의 copy()를 활용한 프로토타입 패턴"
+                explanation = "Kotlin data class의 copy()를 활용한 프로토타입 패턴",
+                expectedOutput = """
+Document(title=제목, content=내용)
+Document(title=제목, content=내용)
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -431,7 +475,10 @@ class MediaAdapter(private val advancedPlayer: AdvancedMediaPlayer) : MediaPlaye
     }
 }
                 """.trimIndent(),
-                explanation = "미디어 플레이어 인터페이스를 통합하는 어댑터"
+                explanation = "미디어 플레이어 인터페이스를 통합하는 어댑터",
+                expectedOutput = """
+VLC 형식으로 재생: movie.vlc
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -489,7 +536,10 @@ class Circle(x: Int, y: Int, radius: Int, api: DrawingAPI) : Shape(api) {
     override fun draw() = drawingAPI.drawCircle(x, y, radius)
 }
                 """.trimIndent(),
-                explanation = "도형과 렌더링 API를 브릿지 패턴으로 분리"
+                explanation = "도형과 렌더링 API를 브릿지 패턴으로 분리",
+                expectedOutput = """
+원 그리기: 중심(100, 100), 반지름(50)
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -545,7 +595,10 @@ class Composite(private val name: String) : Component {
     override fun operation() = "${'$'}name[${'$'}{children.map { it.operation() }}]"
 }
                 """.trimIndent(),
-                explanation = "트리 구조를 표현하는 컴포지트 패턴"
+                explanation = "트리 구조를 표현하는 컴포지트 패턴",
+                expectedOutput = """
+폴더[파일1, 파일2, 하위폴더[파일3]]
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -603,7 +656,11 @@ class Milk(private val coffee: Coffee) : Coffee {
     override fun description() = coffee.description() + " + 우유"
 }
                 """.trimIndent(),
-                explanation = "커피에 옵션을 추가하는 데코레이터 패턴"
+                explanation = "커피에 옵션을 추가하는 데코레이터 패턴",
+                expectedOutput = """
+커피 + 우유
+가격: 1.5
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -653,7 +710,10 @@ class VideoConverter {
     }
 }
                 """.trimIndent(),
-                explanation = "비디오 변환의 복잡성을 숨기는 퍼사드"
+                explanation = "비디오 변환의 복잡성을 숨기는 퍼사드",
+                expectedOutput = """
+비디오 변환 완료: movie.mp4 → mp4 형식
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -702,7 +762,11 @@ object TreeFactory {
     }
 }
                 """.trimIndent(),
-                explanation = "나무 객체의 공통 속성을 공유하는 플라이웨이트"
+                explanation = "나무 객체의 공통 속성을 공유하는 플라이웨이트",
+                expectedOutput = """
+TreeType 생성: 소나무-녹색
+캐시에서 재사용: 소나무-녹색
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -753,7 +817,11 @@ class ProxyImage(private val fileName: String) : Image {
     }
 }
                 """.trimIndent(),
-                explanation = "이미지 지연 로딩을 위한 가상 프록시"
+                explanation = "이미지 지연 로딩을 위한 가상 프록시",
+                expectedOutput = """
+이미지 로딩: photo.jpg
+이미지 표시: photo.jpg
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -805,7 +873,11 @@ abstract class Handler {
     open fun handle(request: String): String? = next?.handle(request)
 }
                 """.trimIndent(),
-                explanation = "고객 지원 시스템의 책임 연쇄 패턴"
+                explanation = "고객 지원 시스템의 책임 연쇄 패턴",
+                expectedOutput = """
+FAQ에서 처리됨: 비밀번호 재설정
+기술지원팀에서 처리됨: 서버 오류
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -855,7 +927,11 @@ class LightOnCommand(private val light: Light) : Command {
     override fun undo() = light.off()
 }
                 """.trimIndent(),
-                explanation = "리모컨의 명령을 객체화하는 커맨드 패턴"
+                explanation = "리모컨의 명령을 객체화하는 커맨드 패턴",
+                expectedOutput = """
+조명 켜기
+조명 끄기 (Undo)
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -907,7 +983,12 @@ class WordsIterator(private val words: List<String>) : Iterator<String> {
     override fun next() = words[index++]
 }
                 """.trimIndent(),
-                explanation = "컬렉션의 요소를 순회하는 반복자 패턴"
+                explanation = "컬렉션의 요소를 순회하는 반복자 패턴",
+                expectedOutput = """
+Hello
+World
+Iterator
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -959,7 +1040,12 @@ class ChatRoom : ChatMediator {
     }
 }
                 """.trimIndent(),
-                explanation = "채팅방의 메시지 전달을 중재하는 패턴"
+                explanation = "채팅방의 메시지 전달을 중재하는 패턴",
+                expectedOutput = """
+[Alice → 채팅방]: 안녕하세요!
+[Bob] 메시지 수신: 안녕하세요!
+[Charlie] 메시지 수신: 안녕하세요!
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -1007,7 +1093,14 @@ class Editor {
     fun restore(memento: EditorMemento) { content = memento.content }
 }
                 """.trimIndent(),
-                explanation = "텍스트 에디터의 Undo 기능 구현"
+                explanation = "텍스트 에디터의 Undo 기능 구현",
+                expectedOutput = """
+현재 내용: Hello World
+저장됨
+현재 내용: Hello World, Modified
+복원됨
+현재 내용: Hello World
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -1055,7 +1148,12 @@ class Subject {
     fun notify(message: String) { observers.forEach { it.update(message) } }
 }
                 """.trimIndent(),
-                explanation = "상태 변화를 구독자들에게 알리는 옵저버 패턴"
+                explanation = "상태 변화를 구독자들에게 알리는 옵저버 패턴",
+                expectedOutput = """
+Observer1: 새 알림 수신
+Observer2: 새 알림 수신
+Observer3: 새 알림 수신
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -1110,7 +1208,11 @@ class ConcreteStateA : State {
     }
 }
                 """.trimIndent(),
-                explanation = "상태에 따라 행동이 변하는 상태 패턴"
+                explanation = "상태에 따라 행동이 변하는 상태 패턴",
+                expectedOutput = """
+State A → State B로 전이
+State B → State A로 전이
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -1162,7 +1264,10 @@ class ShoppingCart {
     fun checkout(amount: Int) { paymentStrategy?.pay(amount) }
 }
                 """.trimIndent(),
-                explanation = "결제 방식을 교체 가능하게 하는 전략 패턴"
+                explanation = "결제 방식을 교체 가능하게 하는 전략 패턴",
+                expectedOutput = """
+10000원을 카드로 결제
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -1214,7 +1319,12 @@ abstract class DataMiner {
     open fun sendReport(analysis: String) = println("Report: ${'$'}analysis")
 }
                 """.trimIndent(),
-                explanation = "데이터 마이닝 알고리즘의 골격을 정의하는 템플릿 메서드"
+                explanation = "데이터 마이닝 알고리즘의 골격을 정의하는 템플릿 메서드",
+                expectedOutput = """
+파일 열기: data.csv
+데이터 추출 완료
+Report: 분석 결과 - 총 100건의 데이터
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -1265,7 +1375,11 @@ interface ShapeVisitor {
     fun visitRectangle(rectangle: Rectangle)
 }
                 """.trimIndent(),
-                explanation = "도형의 면적 계산을 분리하는 방문자 패턴"
+                explanation = "도형의 면적 계산을 분리하는 방문자 패턴",
+                expectedOutput = """
+원 면적 계산: 78.54
+사각형 면적 계산: 200.0
+                """.trimIndent()
             )
         ),
         diagram = """
@@ -1317,7 +1431,11 @@ class AddExpression(
     override fun interpret() = left.interpret() + right.interpret()
 }
                 """.trimIndent(),
-                explanation = "산술 표현식을 해석하는 인터프리터 패턴"
+                explanation = "산술 표현식을 해석하는 인터프리터 패턴",
+                expectedOutput = """
+3 + 5 = 8
+(2 + 3) + 4 = 9
+                """.trimIndent()
             )
         ),
         diagram = """

@@ -205,4 +205,136 @@ object VariableExtractor {
 
         return variables
     }
+
+    // ========== Kotlin 함수 파라미터 및 호출 추출 (신규) ==========
+
+    /**
+     * Kotlin 함수 정의에서 파라미터 정보 추출
+     * 지원 패턴:
+     * - fun name(param1: Type1, param2: Type2) { }
+     * - fun name() { }
+     *
+     * @param code 분석할 Kotlin 코드
+     * @return Map<함수명, List<파라미터명>>
+     */
+    fun extractKotlinFunctionParams(code: String): Map<String, List<String>> {
+        val functions = mutableMapOf<String, List<String>>()
+
+        // 함수 정의 패턴: fun name(params)
+        val functionPattern = """fun\s+(\w+)\s*\(([^)]*)\)""".toRegex()
+
+        functionPattern.findAll(code).forEach { match ->
+            val funcName = match.groupValues[1]
+            val paramsStr = match.groupValues[2].trim()
+
+            val params = if (paramsStr.isEmpty()) {
+                emptyList()
+            } else {
+                paramsStr.split(",")
+                    .map { param ->
+                        // "name: Type" 또는 "name: Type = default" 에서 name만 추출
+                        param.trim().split(":").first().trim()
+                    }
+                    .filter { it.isNotEmpty() }
+            }
+            functions[funcName] = params
+        }
+
+        return functions
+    }
+
+    /**
+     * Kotlin 함수 호출에서 인자 값 추출
+     * 지원 패턴:
+     * - functionName("arg1", "arg2")
+     * - object.methodName("arg1", "arg2")
+     * - functionName(123)
+     * - functionName("string", 123)
+     *
+     * @param code 분석할 Kotlin 코드
+     * @return Map<함수명, List<인자값>>
+     */
+    fun extractKotlinFunctionCalls(code: String): Map<String, List<String>> {
+        val calls = mutableMapOf<String, List<String>>()
+
+        // 함수 호출 패턴: (object.)?methodName(args)
+        // 함수 정의(fun 키워드)는 제외
+        val callPattern = """(?:\w+\.)?(\w+)\s*\(([^)]*)\)""".toRegex()
+
+        callPattern.findAll(code).forEach { match ->
+            val funcName = match.groupValues[1]
+            val argsStr = match.groupValues[2].trim()
+
+            // 함수 정의(fun 키워드 뒤)가 아닌 실제 호출인지 확인
+            val matchStart = match.range.first
+            val prefix = if (matchStart >= 4) code.substring(matchStart - 4, matchStart) else ""
+            if (prefix.contains("fun ") || prefix.endsWith("fun")) {
+                return@forEach
+            }
+
+            // main, init 같은 특수 함수는 제외
+            if (funcName in listOf("main", "init")) {
+                return@forEach
+            }
+
+            val args = extractArgumentsInOrder(argsStr)
+            if (args.isNotEmpty()) {
+                calls[funcName] = args
+            }
+        }
+
+        return calls
+    }
+
+    /**
+     * 인자를 원래 순서대로 추출
+     * 문자열 인자("value")와 숫자 인자(123) 지원
+     */
+    private fun extractArgumentsInOrder(argsStr: String): List<String> {
+        if (argsStr.isEmpty()) return emptyList()
+
+        val args = mutableListOf<String>()
+        var index = 0
+
+        while (index < argsStr.length) {
+            // 공백 스킵
+            while (index < argsStr.length && argsStr[index].isWhitespace()) {
+                index++
+            }
+
+            if (index >= argsStr.length) break
+
+            when {
+                // 문자열 인자 (큰따옴표)
+                argsStr[index] == '"' -> {
+                    val endIndex = argsStr.indexOf('"', index + 1)
+                    if (endIndex != -1) {
+                        args.add(argsStr.substring(index + 1, endIndex))
+                        index = endIndex + 1
+                    } else {
+                        index++
+                    }
+                }
+                // 숫자 인자 (음수 포함)
+                argsStr[index].isDigit() || (argsStr[index] == '-' && index + 1 < argsStr.length && argsStr[index + 1].isDigit()) -> {
+                    val startIndex = index
+                    if (argsStr[index] == '-') index++
+                    while (index < argsStr.length &&
+                        (argsStr[index].isDigit() || argsStr[index] == '.')) {
+                        index++
+                    }
+                    args.add(argsStr.substring(startIndex, index))
+                }
+                // 쉼표 스킵
+                argsStr[index] == ',' -> {
+                    index++
+                }
+                else -> {
+                    index++
+                }
+            }
+        }
+
+        return args
+    }
 }

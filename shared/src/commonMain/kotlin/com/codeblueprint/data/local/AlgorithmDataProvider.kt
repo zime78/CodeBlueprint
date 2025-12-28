@@ -1,6 +1,7 @@
 package com.codeblueprint.data.local
 
 import com.codeblueprint.data.mapper.AlgorithmMapper
+import com.codeblueprint.data.mapper.CodeExampleMapper
 import com.codeblueprint.db.CodeBlueprintDatabase
 import com.codeblueprint.domain.model.Algorithm
 import com.codeblueprint.domain.model.AlgorithmCategory
@@ -16,7 +17,8 @@ import com.codeblueprint.domain.model.TimeComplexity
  */
 class AlgorithmDataProvider(
     private val database: CodeBlueprintDatabase,
-    private val algorithmMapper: AlgorithmMapper
+    private val algorithmMapper: AlgorithmMapper,
+    private val codeExampleMapper: CodeExampleMapper = CodeExampleMapper()
 ) {
     private val queries = database.codeBlueprintQueries
 
@@ -33,6 +35,7 @@ class AlgorithmDataProvider(
     private fun insertInitialAlgorithms() {
         val algorithms = createInitialAlgorithms()
         algorithms.forEach { algorithm ->
+            // 알고리즘 삽입 (기존 로직 유지)
             val values = algorithmMapper.toEntityValues(algorithm)
             queries.insertAlgorithm(
                 id = values.id,
@@ -53,6 +56,29 @@ class AlgorithmDataProvider(
                 difficulty = values.difficulty,
                 frequency = values.frequency
             )
+
+            // 코드 예제를 새 테이블에 삽입
+            algorithm.codeExamples.forEachIndexed { index, codeExample ->
+                val exampleValues = codeExampleMapper.toEntityValues(
+                    domain = codeExample,
+                    patternId = null,
+                    algorithmId = algorithm.id,
+                    index = index
+                )
+                queries.insertCodeExample(
+                    id = exampleValues.id,
+                    pattern_id = exampleValues.patternId,
+                    algorithm_id = exampleValues.algorithmId,
+                    language = exampleValues.language,
+                    code = exampleValues.code,
+                    explanation = exampleValues.explanation,
+                    sample_input = exampleValues.sampleInput,
+                    expected_output = exampleValues.expectedOutput,
+                    display_order = exampleValues.displayOrder,
+                    created_at = exampleValues.createdAt,
+                    updated_at = exampleValues.updatedAt
+                )
+            }
         }
     }
 
@@ -127,8 +153,19 @@ fun bubbleSort(arr: IntArray) {
         if (!swapped) break
     }
 }
+
+fun main() {
+    val arr = intArrayOf(64, 34, 25, 12, 22, 11, 90)
+    println("정렬 전: ${'$'}{arr.contentToString()}")
+    bubbleSort(arr)
+    println("정렬 후: ${'$'}{arr.contentToString()}")
+}
                 """.trimIndent(),
-                explanation = "인접 요소를 비교하여 교환하는 버블 정렬"
+                explanation = "인접 요소를 비교하여 교환하는 버블 정렬",
+                expectedOutput = """
+정렬 전: [64, 34, 25, 12, 22, 11, 90]
+정렬 후: [11, 12, 22, 25, 34, 64, 90]
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("selection-sort", "insertion-sort"),
@@ -180,8 +217,19 @@ fun partition(arr: IntArray, low: Int, high: Int): Int {
     arr[high] = temp
     return i + 1
 }
+
+fun main() {
+    val arr = intArrayOf(10, 7, 8, 9, 1, 5)
+    println("정렬 전: ${'$'}{arr.joinToString()}")
+    quickSort(arr, 0, arr.size - 1)
+    println("정렬 후: ${'$'}{arr.joinToString()}")
+}
                 """.trimIndent(),
-                explanation = "피벗을 기준으로 분할하여 정렬하는 퀵 정렬"
+                explanation = "피벗을 기준으로 분할하여 정렬하는 퀵 정렬",
+                expectedOutput = """
+정렬 전: 10, 7, 8, 9, 1, 5
+정렬 후: 1, 5, 7, 8, 9, 10
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("merge-sort", "heap-sort"),
@@ -228,8 +276,19 @@ fun merge(arr: IntArray, l: Int, m: Int, r: Int) {
     while (i < left.size) arr[k++] = left[i++]
     while (j < right.size) arr[k++] = right[j++]
 }
+
+fun main() {
+    val arr = intArrayOf(38, 27, 43, 3, 9, 82, 10)
+    println("정렬 전: ${'$'}{arr.joinToString()}")
+    mergeSort(arr, 0, arr.size - 1)
+    println("정렬 후: ${'$'}{arr.joinToString()}")
+}
                 """.trimIndent(),
-                explanation = "분할 후 병합하여 정렬하는 병합 정렬"
+                explanation = "분할 후 병합하여 정렬하는 병합 정렬",
+                expectedOutput = """
+정렬 전: 38, 27, 43, 3, 9, 82, 10
+정렬 후: 3, 9, 10, 27, 38, 43, 82
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("quick-sort", "tim-sort"),
@@ -283,8 +342,19 @@ fun heapify(arr: IntArray, n: Int, i: Int) {
         heapify(arr, n, largest)
     }
 }
+
+fun main() {
+    val arr = intArrayOf(12, 11, 13, 5, 6, 7)
+    println("정렬 전: ${'$'}{arr.joinToString()}")
+    heapSort(arr)
+    println("정렬 후: ${'$'}{arr.joinToString()}")
+}
                 """.trimIndent(),
-                explanation = "힙을 이용한 정렬 알고리즘"
+                explanation = "힙을 이용한 정렬 알고리즘",
+                expectedOutput = """
+정렬 전: 12, 11, 13, 5, 6, 7
+정렬 후: 5, 6, 7, 11, 12, 13
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("quick-sort", "merge-sort"),
@@ -328,8 +398,22 @@ fun binarySearch(arr: IntArray, target: Int): Int {
     }
     return -1 // 찾지 못함
 }
+
+fun main() {
+    val arr = intArrayOf(2, 3, 4, 10, 40)
+    val target = 10
+    val result = binarySearch(arr, target)
+    println("배열: ${'$'}{arr.joinToString()}")
+    println("찾는 값: ${'$'}target")
+    println("결과: ${'$'}{if (result != -1) "인덱스 ${'$'}result" else "찾지 못함"}")
+}
                 """.trimIndent(),
-                explanation = "중간값과 비교하여 탐색 범위를 절반씩 줄이는 이진 탐색"
+                explanation = "중간값과 비교하여 탐색 범위를 절반씩 줄이는 이진 탐색",
+                expectedOutput = """
+배열: 2, 3, 4, 10, 40
+찾는 값: 10
+결과: 인덱스 3
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("linear-search", "ternary-search"),
@@ -380,8 +464,23 @@ fun bfs(graph: Map<Int, List<Int>>, start: Int): List<Int> {
     }
     return result
 }
+
+fun main() {
+    val graph = mapOf(
+        0 to listOf(1, 2),
+        1 to listOf(0, 3, 4),
+        2 to listOf(0, 5, 6),
+        3 to listOf(1),
+        4 to listOf(1),
+        5 to listOf(2),
+        6 to listOf(2)
+    )
+    val result = bfs(graph, 0)
+    println("BFS 탐색 순서: ${'$'}{result.joinToString(" -> ")}")
+}
                 """.trimIndent(),
-                explanation = "큐를 사용하여 레벨 순서로 탐색하는 BFS"
+                explanation = "큐를 사용하여 레벨 순서로 탐색하는 BFS",
+                expectedOutput = "BFS 탐색 순서: 0 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6"
             )
         ),
         relatedAlgorithmIds = listOf("dfs", "dijkstra"),
@@ -426,8 +525,23 @@ fun dfs(graph: Map<Int, List<Int>>, start: Int): List<Int> {
     dfsHelper(start)
     return result
 }
+
+fun main() {
+    val graph = mapOf(
+        0 to listOf(1, 2),
+        1 to listOf(0, 3, 4),
+        2 to listOf(0, 5, 6),
+        3 to listOf(1),
+        4 to listOf(1),
+        5 to listOf(2),
+        6 to listOf(2)
+    )
+    val result = dfs(graph, 0)
+    println("DFS 탐색 순서: ${'$'}{result.joinToString(" -> ")}")
+}
                 """.trimIndent(),
-                explanation = "재귀를 사용하여 깊이 방향으로 탐색하는 DFS"
+                explanation = "재귀를 사용하여 깊이 방향으로 탐색하는 DFS",
+                expectedOutput = "DFS 탐색 순서: 0 -> 1 -> 3 -> 4 -> 2 -> 5 -> 6"
             )
         ),
         relatedAlgorithmIds = listOf("bfs", "topological-sort"),
@@ -476,8 +590,29 @@ fun dijkstra(graph: Map<Int, List<Pair<Int, Int>>>, start: Int): Map<Int, Int> {
     }
     return dist
 }
+
+fun main() {
+    val graph = mapOf(
+        0 to listOf(1 to 4, 2 to 1),
+        1 to listOf(3 to 1),
+        2 to listOf(1 to 2, 3 to 5),
+        3 to listOf<Pair<Int, Int>>()
+    )
+    val distances = dijkstra(graph, 0)
+    println("시작 노드: 0")
+    distances.toSortedMap().forEach { (node, dist) ->
+        println("노드 ${'$'}node까지 최단 거리: ${'$'}dist")
+    }
+}
                 """.trimIndent(),
-                explanation = "우선순위 큐를 사용한 다익스트라 최단 경로"
+                explanation = "우선순위 큐를 사용한 다익스트라 최단 경로",
+                expectedOutput = """
+시작 노드: 0
+노드 0까지 최단 거리: 0
+노드 1까지 최단 거리: 3
+노드 2까지 최단 거리: 1
+노드 3까지 최단 거리: 4
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("bellman-ford", "a-star", "floyd-warshall"),
@@ -529,8 +664,31 @@ fun bellmanFord(n: Int, edges: List<Edge>, start: Int): Map<Int, Int>? {
 
     return dist.mapIndexed { i, d -> i to d }.toMap()
 }
+
+fun main() {
+    val edges = listOf(
+        Edge(0, 1, -1),
+        Edge(0, 2, 4),
+        Edge(1, 2, 3),
+        Edge(1, 3, 2),
+        Edge(3, 2, 5),
+        Edge(3, 1, 1)
+    )
+    val result = bellmanFord(4, edges, 0)
+    println("시작 노드: 0")
+    result?.toSortedMap()?.forEach { (node, dist) ->
+        println("노드 ${'$'}node까지 최단 거리: ${'$'}dist")
+    }
+}
                 """.trimIndent(),
-                explanation = "음수 가중치를 허용하는 벨만-포드 알고리즘"
+                explanation = "음수 가중치를 허용하는 벨만-포드 알고리즘",
+                expectedOutput = """
+시작 노드: 0
+노드 0까지 최단 거리: 0
+노드 1까지 최단 거리: -1
+노드 2까지 최단 거리: 2
+노드 3까지 최단 거리: 1
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("dijkstra", "spfa"),
@@ -560,6 +718,16 @@ fun bellmanFord(n: Int, edges: List<Edge>, start: Int): Map<Int, Int>? {
                 code = """
 data class Node(val x: Int, val y: Int)
 
+fun reconstructPath(cameFrom: Map<Node, Node>, current: Node): List<Node> {
+    val path = mutableListOf(current)
+    var node = current
+    while (cameFrom.containsKey(node)) {
+        node = cameFrom[node]!!
+        path.add(0, node)
+    }
+    return path
+}
+
 fun aStar(
     start: Node, goal: Node,
     neighbors: (Node) -> List<Node>,
@@ -588,8 +756,27 @@ fun aStar(
     }
     return null
 }
+
+fun main() {
+    val start = Node(0, 0)
+    val goal = Node(2, 2)
+    val neighbors: (Node) -> List<Node> = { node ->
+        listOf(Node(node.x+1, node.y), Node(node.x, node.y+1))
+            .filter { it.x <= 2 && it.y <= 2 }
+    }
+    val heuristic: (Node, Node) -> Int = { a, b ->
+        kotlin.math.abs(a.x - b.x) + kotlin.math.abs(a.y - b.y)
+    }
+    val path = aStar(start, goal, neighbors, heuristic)
+    println("시작: ${'$'}start, 목표: ${'$'}goal")
+    println("경로: ${'$'}{path?.joinToString(" -> ")}")
+}
                 """.trimIndent(),
-                explanation = "휴리스틱을 활용한 A* 경로 탐색"
+                explanation = "휴리스틱을 활용한 A* 경로 탐색",
+                expectedOutput = """
+시작: Node(x=0, y=0), 목표: Node(x=2, y=2)
+경로: Node(x=0, y=0) -> Node(x=1, y=0) -> Node(x=2, y=0) -> Node(x=2, y=1) -> Node(x=2, y=2)
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("dijkstra", "bfs"),
@@ -633,8 +820,30 @@ fun floydWarshall(n: Int, graph: Array<IntArray>): Array<IntArray> {
     }
     return dist
 }
+
+fun main() {
+    val INF = Int.MAX_VALUE
+    val graph = arrayOf(
+        intArrayOf(0, 3, INF, 5),
+        intArrayOf(2, 0, INF, 4),
+        intArrayOf(INF, 1, 0, INF),
+        intArrayOf(INF, INF, 2, 0)
+    )
+    val result = floydWarshall(4, graph)
+    println("모든 쌍 최단 경로:")
+    result.forEachIndexed { i, row ->
+        println("${'$'}i -> ${'$'}{row.map { if (it == INF) "INF" else it.toString() }}")
+    }
+}
                 """.trimIndent(),
-                explanation = "모든 정점 쌍 간의 최단 경로를 구하는 플로이드-워셜"
+                explanation = "모든 정점 쌍 간의 최단 경로를 구하는 플로이드-워셜",
+                expectedOutput = """
+모든 쌍 최단 경로:
+0 -> [0, 3, 7, 5]
+1 -> [2, 0, 6, 4]
+2 -> [3, 1, 0, 5]
+3 -> [5, 3, 2, 0]
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("dijkstra", "johnson"),
@@ -680,8 +889,21 @@ fun lcs(s1: String, s2: String): Int {
     }
     return dp[m][n]
 }
+
+fun main() {
+    val s1 = "ABCDGH"
+    val s2 = "AEDFHR"
+    println("문자열1: ${'$'}s1")
+    println("문자열2: ${'$'}s2")
+    println("LCS 길이: ${'$'}{lcs(s1, s2)}")
+}
                 """.trimIndent(),
-                explanation = "DP를 사용한 최장 공통 부분 수열 길이 계산"
+                explanation = "DP를 사용한 최장 공통 부분 수열 길이 계산",
+                expectedOutput = """
+문자열1: ABCDGH
+문자열2: AEDFHR
+LCS 길이: 3
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("lis", "edit-distance"),
@@ -726,8 +948,24 @@ fun knapsack(weights: IntArray, values: IntArray, capacity: Int): Int {
     }
     return dp[n][capacity]
 }
+
+fun main() {
+    val weights = intArrayOf(10, 20, 30)
+    val values = intArrayOf(60, 100, 120)
+    val capacity = 50
+    println("무게: ${'$'}{weights.joinToString()}")
+    println("가치: ${'$'}{values.joinToString()}")
+    println("배낭 용량: ${'$'}capacity")
+    println("최대 가치: ${'$'}{knapsack(weights, values, capacity)}")
+}
                 """.trimIndent(),
-                explanation = "DP를 사용한 0/1 배낭 문제 해결"
+                explanation = "DP를 사용한 0/1 배낭 문제 해결",
+                expectedOutput = """
+무게: 10, 20, 30
+가치: 60, 100, 120
+배낭 용량: 50
+최대 가치: 220
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("coin-change", "subset-sum"),
@@ -788,8 +1026,22 @@ fun kmpSearch(text: String, pattern: String): List<Int> {
     }
     return result
 }
+
+fun main() {
+    val text = "ABABDABACDABABCABAB"
+    val pattern = "ABABCABAB"
+    println("텍스트: ${'$'}text")
+    println("패턴: ${'$'}pattern")
+    val positions = kmpSearch(text, pattern)
+    println("패턴 발견 위치: ${'$'}{positions.joinToString()}")
+}
                 """.trimIndent(),
-                explanation = "실패 함수를 사용한 KMP 문자열 검색"
+                explanation = "실패 함수를 사용한 KMP 문자열 검색",
+                expectedOutput = """
+텍스트: ABABDABACDABABCABAB
+패턴: ABABCABAB
+패턴 발견 위치: 10
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("rabin-karp", "boyer-moore"),
@@ -849,8 +1101,25 @@ class Trie {
         return true
     }
 }
+
+fun main() {
+    val trie = Trie()
+    trie.insert("apple")
+    trie.insert("app")
+    trie.insert("application")
+    println("search('apple'): ${'$'}{trie.search("apple")}")
+    println("search('app'): ${'$'}{trie.search("app")}")
+    println("search('appl'): ${'$'}{trie.search("appl")}")
+    println("startsWith('app'): ${'$'}{trie.startsWith("app")}")
+}
                 """.trimIndent(),
-                explanation = "접두사 트리를 구현한 Trie 자료구조"
+                explanation = "접두사 트리를 구현한 Trie 자료구조",
+                expectedOutput = """
+search('apple'): true
+search('app'): true
+search('appl'): false
+startsWith('app'): true
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("suffix-tree", "aho-corasick"),
@@ -898,8 +1167,21 @@ fun gcdRecursive(a: Int, b: Int): Int =
 
 // 최소공배수
 fun lcm(a: Int, b: Int): Int = a / gcd(a, b) * b
+
+fun main() {
+    val a = 48
+    val b = 18
+    println("a = ${'$'}a, b = ${'$'}b")
+    println("GCD(${'$'}a, ${'$'}b) = ${'$'}{gcd(a, b)}")
+    println("LCM(${'$'}a, ${'$'}b) = ${'$'}{lcm(a, b)}")
+}
                 """.trimIndent(),
-                explanation = "유클리드 호제법을 이용한 GCD 계산"
+                explanation = "유클리드 호제법을 이용한 GCD 계산",
+                expectedOutput = """
+a = 48, b = 18
+GCD(48, 18) = 6
+LCM(48, 18) = 144
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("extended-gcd", "lcm"),
@@ -946,8 +1228,21 @@ fun sieveOfEratosthenes(n: Int): List<Int> {
 
     return isPrime.indices.filter { isPrime[it] }
 }
+
+fun main() {
+    val n = 30
+    val primes = sieveOfEratosthenes(n)
+    println("1부터 ${'$'}n까지의 소수:")
+    println(primes.joinToString())
+    println("소수 개수: ${'$'}{primes.size}")
+}
                 """.trimIndent(),
-                explanation = "배수를 제거하여 소수를 찾는 에라토스테네스의 체"
+                explanation = "배수를 제거하여 소수를 찾는 에라토스테네스의 체",
+                expectedOutput = """
+1부터 30까지의 소수:
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29
+소수 개수: 10
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("miller-rabin", "prime-factorization"),
@@ -1007,8 +1302,24 @@ fun solveNQueens(n: Int): List<List<String>> {
     backtrack(0)
     return result
 }
+
+fun main() {
+    val n = 4
+    val solutions = solveNQueens(n)
+    println("${'$'}n-Queens 해답 개수: ${'$'}{solutions.size}")
+    println("첫 번째 해답:")
+    solutions.firstOrNull()?.forEach { println(it) }
+}
                 """.trimIndent(),
-                explanation = "백트래킹으로 N-Queens 문제 해결"
+                explanation = "백트래킹으로 N-Queens 문제 해결",
+                expectedOutput = """
+4-Queens 해답 개수: 2
+첫 번째 해답:
+.Q..
+...Q
+Q...
+..Q.
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("sudoku-solver", "graph-coloring"),
@@ -1070,8 +1381,27 @@ fun getCodes(root: HuffmanNode?, code: String = ""): Map<Char, String> {
     traverse(root, code)
     return codes
 }
+
+fun main() {
+    val freq = mapOf('a' to 5, 'b' to 9, 'c' to 12, 'd' to 13, 'e' to 16, 'f' to 45)
+    val root = buildHuffmanTree(freq)
+    val codes = getCodes(root)
+    println("허프만 코드:")
+    codes.toSortedMap().forEach { (char, code) ->
+        println("${'$'}char: ${'$'}code")
+    }
+}
                 """.trimIndent(),
-                explanation = "탐욕 알고리즘을 사용한 허프만 트리 구성"
+                explanation = "탐욕 알고리즘을 사용한 허프만 트리 구성",
+                expectedOutput = """
+허프만 코드:
+a: 1100
+b: 1101
+c: 100
+d: 101
+e: 111
+f: 0
+                """.trimIndent()
             )
         ),
         relatedAlgorithmIds = listOf("shannon-fano", "arithmetic-coding"),

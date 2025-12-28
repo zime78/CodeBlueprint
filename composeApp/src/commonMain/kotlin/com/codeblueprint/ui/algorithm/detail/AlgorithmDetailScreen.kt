@@ -143,7 +143,9 @@ fun AlgorithmDetailScreen(
                             viewModel.onEvent(AlgorithmDetailEvent.OnLanguageChange(language))
                         },
                         onRelatedAlgorithmClick = { component.onRelatedAlgorithmClick(it) },
-                        onCodePlaygroundClick = { component.onCodePlaygroundClick() }
+                        onCodePlaygroundClick = { code, languageName, expectedOutput ->
+                            component.onCodePlaygroundClick(code, languageName, expectedOutput)
+                        }
                     )
                 }
 
@@ -194,7 +196,7 @@ private fun DetailContent(
     selectedLanguage: ProgrammingLanguage,
     onLanguageChange: (ProgrammingLanguage) -> Unit,
     onRelatedAlgorithmClick: (String) -> Unit,
-    onCodePlaygroundClick: () -> Unit
+    onCodePlaygroundClick: (code: String, languageName: String, expectedOutput: String) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -581,7 +583,7 @@ private fun CodeExampleSection(
     codeExamples: List<CodeExample>,
     selectedLanguage: ProgrammingLanguage,
     onLanguageChange: (ProgrammingLanguage) -> Unit,
-    onCodePlaygroundClick: () -> Unit
+    onCodePlaygroundClick: (code: String, languageName: String, expectedOutput: String) -> Unit
 ) {
     val availableLanguages = codeExamples.map { it.language }.distinct()
     val currentExample = codeExamples.find { it.language == selectedLanguage }
@@ -649,7 +651,13 @@ private fun CodeExampleSection(
 
                 // 코드 실행 버튼
                 FilledTonalButton(
-                    onClick = onCodePlaygroundClick,
+                    onClick = {
+                        onCodePlaygroundClick(
+                            example.code,
+                            example.language.name,
+                            example.expectedOutput
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(

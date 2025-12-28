@@ -3,6 +3,7 @@ package com.codeblueprint.data.repository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
+import com.codeblueprint.data.mapper.CodeExampleMapper
 import com.codeblueprint.data.mapper.LearningProgressMapper
 import com.codeblueprint.data.mapper.PatternMapper
 import com.codeblueprint.db.CodeBlueprintDatabase
@@ -24,7 +25,8 @@ import kotlinx.datetime.Clock
 class PatternRepositoryImpl(
     private val database: CodeBlueprintDatabase,
     private val patternMapper: PatternMapper,
-    private val progressMapper: LearningProgressMapper
+    private val progressMapper: LearningProgressMapper,
+    private val codeExampleMapper: CodeExampleMapper = CodeExampleMapper()
 ) : PatternRepository {
 
     private val queries = database.codeBlueprintQueries
@@ -48,9 +50,19 @@ class PatternRepositoryImpl(
     }
 
     override suspend fun getPatternById(patternId: String): DesignPattern? {
-        return queries.getPatternById(patternId)
-            .executeAsOneOrNull()
-            ?.let { patternMapper.toDomain(it) }
+        val patternEntity = queries.getPatternById(patternId).executeAsOneOrNull() ?: return null
+        val pattern = patternMapper.toDomain(patternEntity)
+
+        // 새 테이블에서 코드 예제 조회 (우선), 없으면 기존 JSON 데이터 사용
+        val codeExamples = queries.getCodeExamplesByPatternId(patternId)
+            .executeAsList()
+            .map { codeExampleMapper.toDomain(it) }
+
+        return if (codeExamples.isNotEmpty()) {
+            pattern.copy(codeExamples = codeExamples)
+        } else {
+            pattern // 기존 JSON 파싱 데이터 사용 (fallback)
+        }
     }
 
     override fun searchPatterns(query: String): Flow<List<DesignPattern>> {

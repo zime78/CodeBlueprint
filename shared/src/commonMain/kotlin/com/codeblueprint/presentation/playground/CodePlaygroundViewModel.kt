@@ -11,12 +11,19 @@ import kotlinx.coroutines.launch
 
 /**
  * 코드 플레이그라운드 ViewModel
+ *
+ * @param executeCodeUseCase 코드 실행 UseCase
+ * @param clipboardService 클립보드 서비스
+ * @param initialCode 초기 코드
+ * @param initialLanguage 초기 언어
+ * @param initialExpectedOutput 미리 정의된 예상 출력값
  */
 class CodePlaygroundViewModel(
     private val executeCodeUseCase: ExecuteCodeUseCase,
     private val clipboardService: ClipboardService,
     private val initialCode: String = "",
-    private val initialLanguage: ProgrammingLanguage = ProgrammingLanguage.KOTLIN
+    private val initialLanguage: ProgrammingLanguage = ProgrammingLanguage.KOTLIN,
+    private val initialExpectedOutput: String = ""
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow<CodePlaygroundUiState>(CodePlaygroundUiState.Idle())
@@ -27,6 +34,8 @@ class CodePlaygroundViewModel(
 
     private val _selectedLanguage = MutableStateFlow(initialLanguage)
     val selectedLanguage: StateFlow<ProgrammingLanguage> = _selectedLanguage.asStateFlow()
+
+    private val _expectedOutput = MutableStateFlow(initialExpectedOutput)
 
     private val _copyMessage = MutableStateFlow<String?>(null)
     val copyMessage: StateFlow<String?> = _copyMessage.asStateFlow()
@@ -103,6 +112,7 @@ class CodePlaygroundViewModel(
 
     /**
      * 코드 실행
+     * expectedOutput이 있으면 해당 값을 결과로 사용
      */
     private fun executeCode() {
         val currentCode = _code.value.trim()
@@ -115,7 +125,13 @@ class CodePlaygroundViewModel(
             _uiState.value = CodePlaygroundUiState.Executing
 
             try {
-                val result = executeCodeUseCase(currentCode, _selectedLanguage.value)
+                // expectedOutput이 비어있지 않으면 해당 값을 사용
+                val expectedOutput = _expectedOutput.value.takeIf { it.isNotBlank() }
+                val result = executeCodeUseCase(
+                    code = currentCode,
+                    language = _selectedLanguage.value,
+                    expectedOutput = expectedOutput
+                )
                 if (result.success) {
                     _uiState.value = CodePlaygroundUiState.Success(result)
                 } else {

@@ -5,6 +5,7 @@ import com.codeblueprint.data.local.DatabaseDriverFactory
 import com.codeblueprint.data.local.PatternDataInitializer
 import com.codeblueprint.data.mapper.AlgorithmLearningProgressMapper
 import com.codeblueprint.data.mapper.AlgorithmMapper
+import com.codeblueprint.data.mapper.CodeExampleMapper
 import com.codeblueprint.data.mapper.LearningProgressMapper
 import com.codeblueprint.data.mapper.PatternMapper
 import com.codeblueprint.data.mapper.SettingsMapper
@@ -84,6 +85,7 @@ val dataModule = module {
     single { SettingsMapper() }
     single { AlgorithmMapper() }
     single { AlgorithmLearningProgressMapper() }
+    single { CodeExampleMapper() }
 
     // Database
     single {
@@ -92,15 +94,16 @@ val dataModule = module {
     }
 
     // Data Initializer
-    single { PatternDataInitializer(get(), get()) }
-    single { AlgorithmDataProvider(get(), get()) }
+    single { PatternDataInitializer(get(), get(), get()) }
+    single { AlgorithmDataProvider(get(), get(), get()) }
 
     // Repository
     single<PatternRepository> {
         PatternRepositoryImpl(
             database = get(),
             patternMapper = get(),
-            progressMapper = get()
+            progressMapper = get(),
+            codeExampleMapper = get()
         )
     }
     single<SettingsRepository> {
@@ -121,7 +124,8 @@ val dataModule = module {
         AlgorithmRepositoryImpl(
             database = get(),
             algorithmMapper = get(),
-            progressMapper = get<AlgorithmLearningProgressMapper>()
+            progressMapper = get<AlgorithmLearningProgressMapper>(),
+            codeExampleMapper = get()
         )
     }
 }
@@ -147,8 +151,21 @@ val presentationModule = module {
         ArchitectureDetailViewModel(architectureId, get())
     }
 
-    // Code Playground ViewModel
-    factory { CodePlaygroundViewModel(get(), get()) }
+    // Code Playground ViewModel (파라미터: code, language, expectedOutput)
+    factory { (code: String, languageName: String, expectedOutput: String) ->
+        val language = try {
+            com.codeblueprint.domain.model.ProgrammingLanguage.valueOf(languageName)
+        } catch (e: Exception) {
+            com.codeblueprint.domain.model.ProgrammingLanguage.KOTLIN
+        }
+        CodePlaygroundViewModel(
+            executeCodeUseCase = get(),
+            clipboardService = get(),
+            initialCode = code,
+            initialLanguage = language,
+            initialExpectedOutput = expectedOutput
+        )
+    }
 
     // Algorithm ViewModels
     factory { AlgorithmListViewModel(get(), get()) }

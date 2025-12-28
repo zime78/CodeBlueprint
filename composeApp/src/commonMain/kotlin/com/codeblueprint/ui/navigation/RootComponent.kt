@@ -48,7 +48,7 @@ interface PatternDetailComponent {
     val patternId: String
     fun onBackClick()
     fun onRelatedPatternClick(patternId: String)
-    fun onCodePlaygroundClick()
+    fun onCodePlaygroundClick(code: String, languageName: String, expectedOutput: String)
 }
 
 /**
@@ -95,6 +95,9 @@ interface ArchitectureDetailComponent {
  * 코드 플레이그라운드 화면 컴포넌트
  */
 interface CodePlaygroundComponent {
+    val code: String
+    val languageName: String
+    val expectedOutput: String
     fun onBackClick()
 }
 
@@ -114,7 +117,7 @@ interface AlgorithmDetailComponent {
     val algorithmId: String
     fun onBackClick()
     fun onRelatedAlgorithmClick(algorithmId: String)
-    fun onCodePlaygroundClick()
+    fun onCodePlaygroundClick(code: String, languageName: String, expectedOutput: String)
 }
 
 /**
@@ -158,7 +161,13 @@ class DefaultRootComponent(
                 DefaultArchitectureDetailComponent(componentContext, config.architectureId, navigation)
             )
             is Config.CodePlayground -> RootComponent.Child.CodePlayground(
-                DefaultCodePlaygroundComponent(componentContext, navigation)
+                DefaultCodePlaygroundComponent(
+                    componentContext = componentContext,
+                    code = config.code,
+                    languageName = config.languageName,
+                    expectedOutput = config.expectedOutput,
+                    navigation = navigation
+                )
             )
             is Config.AlgorithmList -> RootComponent.Child.AlgorithmList(
                 DefaultAlgorithmListComponent(componentContext, navigation)
@@ -193,7 +202,11 @@ class DefaultRootComponent(
         data class ArchitectureDetail(val architectureId: String) : Config()
 
         @Serializable
-        data object CodePlayground : Config()
+        data class CodePlayground(
+            val code: String = "",
+            val languageName: String = "KOTLIN",
+            val expectedOutput: String = ""
+        ) : Config()
 
         @Serializable
         data object AlgorithmList : Config()
@@ -253,8 +266,8 @@ class DefaultPatternDetailComponent(
         navigation.push(DefaultRootComponent.Config.PatternDetail(patternId))
     }
 
-    override fun onCodePlaygroundClick() {
-        navigation.push(DefaultRootComponent.Config.CodePlayground)
+    override fun onCodePlaygroundClick(code: String, languageName: String, expectedOutput: String) {
+        navigation.push(DefaultRootComponent.Config.CodePlayground(code, languageName, expectedOutput))
     }
 }
 
@@ -345,6 +358,9 @@ class DefaultArchitectureDetailComponent(
  */
 class DefaultCodePlaygroundComponent(
     componentContext: ComponentContext,
+    override val code: String,
+    override val languageName: String,
+    override val expectedOutput: String,
     private val navigation: StackNavigation<DefaultRootComponent.Config>
 ) : CodePlaygroundComponent, ComponentContext by componentContext {
 
@@ -391,7 +407,7 @@ class DefaultAlgorithmDetailComponent(
         navigation.push(DefaultRootComponent.Config.AlgorithmDetail(algorithmId))
     }
 
-    override fun onCodePlaygroundClick() {
-        navigation.push(DefaultRootComponent.Config.CodePlayground)
+    override fun onCodePlaygroundClick(code: String, languageName: String, expectedOutput: String) {
+        navigation.push(DefaultRootComponent.Config.CodePlayground(code, languageName, expectedOutput))
     }
 }
