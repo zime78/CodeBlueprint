@@ -97,9 +97,20 @@ UI (Screen) → ViewModel → UseCase → Repository → SQLDelight
 2. `./gradlew generateCommonMainCodeBlueprintDatabaseInterface` 실행
 3. 기존 DB 삭제 필요 시: `rm -f ~/.codeblueprint/codeblueprint.db`
 
-## SKILL 연동
+## Claude Code 연동 (tools/)
 
-`~/.claude/skills/codeblueprint-patterns/` 디렉토리 구조:
+프로젝트에 MCP 서버와 SKILL 레퍼런스가 포함되어 있습니다.
+
+### MCP 서버 (`tools/mcp-server/`)
+
+```bash
+# 빌드 및 실행
+cd tools/mcp-server
+npm install
+npm run build
+```
+
+### SKILL 레퍼런스 (`tools/skill/`)
 
 ```
 SKILL.md                          # 메인 스킬 정의
@@ -141,24 +152,24 @@ references/
 | 위치 | 파일 | 설명 |
 |------|------|------|
 | **앱 (DB)** | `shared/.../PatternDataInitializer.kt` | 앱에서 사용하는 패턴 데이터 |
-| **MCP** | `~/.claude/mcp-servers/codeblueprint/data/patterns.json` | MCP 서버 패턴 데이터 |
-| **SKILL** | `~/.claude/skills/codeblueprint-patterns/references/patterns/*.md` | 스킬 레퍼런스 문서 |
+| **MCP** | `tools/mcp-server/data/patterns.json` | MCP 서버 패턴 데이터 |
+| **SKILL** | `tools/skill/references/patterns/*.md` | 스킬 레퍼런스 문서 |
 
 ### 문서 업데이트
 
 코드 변경 시 관련 문서도 함께 업데이트:
 
-- 패턴 추가/수정 → SKILL 레퍼런스 (`patterns/*.md`) + MCP 데이터 (`patterns.json`)
-- 코드 템플릿 변경 → `code_templates.md`
+- 패턴 추가/수정 → SKILL 레퍼런스 (`tools/skill/references/patterns/*.md`) + MCP 데이터 (`tools/mcp-server/data/patterns.json`)
+- 코드 템플릿 변경 → `tools/skill/references/code_templates.md`
 - 아키텍처 변경 → `CLAUDE.md`
 
 ### 체크리스트
 
 ```
 [ ] PatternDataInitializer.kt 수정
-[ ] patterns.json 수정
-[ ] patterns/*.md 수정
-[ ] code_templates.md 수정 (코드 예시 변경 시)
-[ ] MCP 서버 재빌드: cd ~/.claude/mcp-servers/codeblueprint && npm run build
+[ ] tools/mcp-server/data/patterns.json 수정
+[ ] tools/skill/references/patterns/*.md 수정
+[ ] tools/skill/references/code_templates.md 수정 (코드 예시 변경 시)
+[ ] MCP 서버 재빌드: cd tools/mcp-server && npm run build
 [ ] 앱 DB 초기화: rm -f ~/.codeblueprint/codeblueprint.db
 ```

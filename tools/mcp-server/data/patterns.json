@@ -1,0 +1,787 @@
+{
+  "patterns": [
+    {
+      "id": "singleton",
+      "name": "Singleton",
+      "koreanName": "싱글톤",
+      "category": "creational",
+      "purpose": "클래스의 인스턴스를 오직 하나만 생성하고, 전역적인 접근점을 제공합니다.",
+      "characteristics": [
+        "인스턴스가 오직 하나만 존재",
+        "전역 접근점 제공",
+        "지연 초기화 가능"
+      ],
+      "advantages": [
+        "메모리 낭비 방지",
+        "전역 상태 관리 용이",
+        "데이터 공유 용이"
+      ],
+      "disadvantages": [
+        "테스트가 어려움",
+        "멀티스레드 환경에서 동기화 필요",
+        "의존성이 숨겨짐"
+      ],
+      "useCases": [
+        "데이터베이스 연결 관리",
+        "로깅 시스템",
+        "설정 관리자"
+      ],
+      "difficulty": "low",
+      "frequency": 5,
+      "relatedPatterns": ["factory_method", "prototype"],
+      "codeExamples": {
+        "kotlin": "object Singleton {\n    fun doSomething() {\n        println(\"Hello from Singleton\")\n    }\n}\n\n// 사용\nfun main() {\n    Singleton.doSomething()\n}",
+        "java": "public class Singleton {\n    private static volatile Singleton instance;\n\n    private Singleton() {}\n\n    public static Singleton getInstance() {\n        if (instance == null) {\n            synchronized (Singleton.class) {\n                if (instance == null) {\n                    instance = new Singleton();\n                }\n            }\n        }\n        return instance;\n    }\n\n    public void doSomething() {\n        System.out.println(\"Hello from Singleton\");\n    }\n}",
+        "swift": "class Singleton {\n    static let shared = Singleton()\n\n    private init() {}\n\n    func doSomething() {\n        print(\"Hello from Singleton\")\n    }\n}",
+        "python": "class Singleton:\n    _instance = None\n\n    def __new__(cls):\n        if cls._instance is None:\n            cls._instance = super().__new__(cls)\n        return cls._instance\n\n    def do_something(self):\n        print(\"Hello from Singleton\")"
+      },
+      "diagram": "classDiagram\n    class Singleton {\n        -instance: Singleton\n        -Singleton()\n        +getInstance(): Singleton\n        +doSomething()\n    }"
+    },
+    {
+      "id": "factory_method",
+      "name": "Factory Method",
+      "koreanName": "팩토리 메서드",
+      "category": "creational",
+      "purpose": "객체 생성을 서브클래스에 위임하여 어떤 클래스의 인스턴스를 만들지 결정합니다.",
+      "characteristics": [
+        "객체 생성 로직을 서브클래스에 위임",
+        "인터페이스 기반 설계",
+        "확장에 열려있음"
+      ],
+      "advantages": [
+        "느슨한 결합",
+        "단일 책임 원칙 준수",
+        "개방-폐쇄 원칙 준수"
+      ],
+      "disadvantages": [
+        "클래스 수 증가",
+        "복잡도 증가"
+      ],
+      "useCases": [
+        "문서 편집기의 다양한 문서 타입 생성",
+        "데이터베이스 커넥터 생성",
+        "UI 컴포넌트 생성"
+      ],
+      "difficulty": "medium",
+      "frequency": 5,
+      "relatedPatterns": ["abstract_factory", "template_method", "prototype"],
+      "codeExamples": {
+        "kotlin": "interface Product {\n    fun use()\n}\n\nclass ConcreteProductA : Product {\n    override fun use() = println(\"Product A 사용\")\n}\n\nclass ConcreteProductB : Product {\n    override fun use() = println(\"Product B 사용\")\n}\n\nabstract class Creator {\n    abstract fun factoryMethod(): Product\n\n    fun operation() {\n        val product = factoryMethod()\n        product.use()\n    }\n}\n\nclass ConcreteCreatorA : Creator() {\n    override fun factoryMethod(): Product = ConcreteProductA()\n}\n\nclass ConcreteCreatorB : Creator() {\n    override fun factoryMethod(): Product = ConcreteProductB()\n}",
+        "java": "interface Product {\n    void use();\n}\n\nclass ConcreteProductA implements Product {\n    @Override\n    public void use() {\n        System.out.println(\"Product A 사용\");\n    }\n}\n\nabstract class Creator {\n    public abstract Product factoryMethod();\n\n    public void operation() {\n        Product product = factoryMethod();\n        product.use();\n    }\n}\n\nclass ConcreteCreatorA extends Creator {\n    @Override\n    public Product factoryMethod() {\n        return new ConcreteProductA();\n    }\n}"
+      },
+      "diagram": "classDiagram\n    class Creator {\n        <<abstract>>\n        +factoryMethod(): Product\n        +operation()\n    }\n    class ConcreteCreatorA {\n        +factoryMethod(): Product\n    }\n    class ConcreteCreatorB {\n        +factoryMethod(): Product\n    }\n    class Product {\n        <<interface>>\n        +use()\n    }\n    class ConcreteProductA {\n        +use()\n    }\n    class ConcreteProductB {\n        +use()\n    }\n    Creator <|-- ConcreteCreatorA\n    Creator <|-- ConcreteCreatorB\n    Product <|.. ConcreteProductA\n    Product <|.. ConcreteProductB\n    ConcreteCreatorA ..> ConcreteProductA\n    ConcreteCreatorB ..> ConcreteProductB"
+    },
+    {
+      "id": "abstract_factory",
+      "name": "Abstract Factory",
+      "koreanName": "추상 팩토리",
+      "category": "creational",
+      "purpose": "관련 객체들의 군을 생성하기 위한 인터페이스를 제공합니다.",
+      "characteristics": [
+        "관련 객체군 생성",
+        "제품 일관성 보장",
+        "구체적 클래스 분리"
+      ],
+      "advantages": [
+        "제품 군 일관성 보장",
+        "구체 클래스 분리",
+        "제품 교체 용이"
+      ],
+      "disadvantages": [
+        "새로운 제품 추가 어려움",
+        "복잡도 증가"
+      ],
+      "useCases": [
+        "크로스 플랫폼 UI 툴킷",
+        "데이터베이스 접근 계층",
+        "테마 시스템"
+      ],
+      "difficulty": "high",
+      "frequency": 4,
+      "relatedPatterns": ["factory_method", "singleton", "prototype"],
+      "codeExamples": {
+        "kotlin": "interface Button {\n    fun render()\n}\n\ninterface Checkbox {\n    fun check()\n}\n\nclass WindowsButton : Button {\n    override fun render() = println(\"Windows 버튼 렌더링\")\n}\n\nclass MacButton : Button {\n    override fun render() = println(\"Mac 버튼 렌더링\")\n}\n\ninterface GUIFactory {\n    fun createButton(): Button\n    fun createCheckbox(): Checkbox\n}\n\nclass WindowsFactory : GUIFactory {\n    override fun createButton(): Button = WindowsButton()\n    override fun createCheckbox(): Checkbox = WindowsCheckbox()\n}\n\nclass MacFactory : GUIFactory {\n    override fun createButton(): Button = MacButton()\n    override fun createCheckbox(): Checkbox = MacCheckbox()\n}"
+      },
+      "diagram": "classDiagram\n    class AbstractFactory {\n        <<interface>>\n        +createProductA(): ProductA\n        +createProductB(): ProductB\n    }\n    class ConcreteFactory1 {\n        +createProductA(): ProductA\n        +createProductB(): ProductB\n    }\n    class ConcreteFactory2 {\n        +createProductA(): ProductA\n        +createProductB(): ProductB\n    }\n    AbstractFactory <|.. ConcreteFactory1\n    AbstractFactory <|.. ConcreteFactory2"
+    },
+    {
+      "id": "builder",
+      "name": "Builder",
+      "koreanName": "빌더",
+      "category": "creational",
+      "purpose": "복잡한 객체의 생성 과정을 단계별로 분리하여 다양한 표현을 만들 수 있게 합니다.",
+      "characteristics": [
+        "단계별 객체 생성",
+        "동일한 생성 과정으로 다양한 표현",
+        "불변 객체 생성에 유용"
+      ],
+      "advantages": [
+        "복잡한 객체 생성 단순화",
+        "불변 객체 생성 지원",
+        "코드 가독성 향상"
+      ],
+      "disadvantages": [
+        "클래스 수 증가",
+        "간단한 객체에는 과도함"
+      ],
+      "useCases": [
+        "복잡한 설정 객체",
+        "SQL 쿼리 빌더",
+        "UI 레이아웃 구성"
+      ],
+      "difficulty": "medium",
+      "frequency": 5,
+      "relatedPatterns": ["abstract_factory", "composite"],
+      "codeExamples": {
+        "kotlin": "data class Pizza(\n    val dough: String,\n    val sauce: String,\n    val topping: String\n) {\n    class Builder {\n        private var dough: String = \"기본 도우\"\n        private var sauce: String = \"토마토\"\n        private var topping: String = \"치즈\"\n\n        fun dough(dough: String) = apply { this.dough = dough }\n        fun sauce(sauce: String) = apply { this.sauce = sauce }\n        fun topping(topping: String) = apply { this.topping = topping }\n        fun build() = Pizza(dough, sauce, topping)\n    }\n}\n\n// 사용\nval pizza = Pizza.Builder()\n    .dough(\"씬 도우\")\n    .sauce(\"바베큐\")\n    .topping(\"페퍼로니\")\n    .build()",
+        "java": "public class Pizza {\n    private final String dough;\n    private final String sauce;\n    private final String topping;\n\n    private Pizza(Builder builder) {\n        this.dough = builder.dough;\n        this.sauce = builder.sauce;\n        this.topping = builder.topping;\n    }\n\n    public static class Builder {\n        private String dough = \"기본 도우\";\n        private String sauce = \"토마토\";\n        private String topping = \"치즈\";\n\n        public Builder dough(String dough) {\n            this.dough = dough;\n            return this;\n        }\n\n        public Builder sauce(String sauce) {\n            this.sauce = sauce;\n            return this;\n        }\n\n        public Builder topping(String topping) {\n            this.topping = topping;\n            return this;\n        }\n\n        public Pizza build() {\n            return new Pizza(this);\n        }\n    }\n}"
+      },
+      "diagram": "classDiagram\n    class Builder {\n        <<interface>>\n        +buildPartA()\n        +buildPartB()\n        +getResult(): Product\n    }\n    class ConcreteBuilder {\n        +buildPartA()\n        +buildPartB()\n        +getResult(): Product\n    }\n    class Director {\n        +construct()\n    }\n    class Product {\n        +partA\n        +partB\n    }\n    Builder <|.. ConcreteBuilder\n    Director o-- Builder\n    ConcreteBuilder ..> Product"
+    },
+    {
+      "id": "prototype",
+      "name": "Prototype",
+      "koreanName": "프로토타입",
+      "category": "creational",
+      "purpose": "기존 객체를 복제하여 새 객체를 생성합니다.",
+      "characteristics": [
+        "객체 복제를 통한 생성",
+        "복잡한 초기화 과정 회피",
+        "런타임에 객체 타입 결정"
+      ],
+      "advantages": [
+        "복잡한 객체 생성 비용 감소",
+        "런타임에 새 객체 추가 가능",
+        "서브클래싱 감소"
+      ],
+      "disadvantages": [
+        "순환 참조가 있는 객체 복제 어려움",
+        "깊은 복사 구현 복잡"
+      ],
+      "useCases": [
+        "그래픽 편집기의 도형 복제",
+        "게임 캐릭터 복제",
+        "설정 템플릿"
+      ],
+      "difficulty": "medium",
+      "frequency": 3,
+      "relatedPatterns": ["abstract_factory", "factory_method"],
+      "codeExamples": {
+        "kotlin": "interface Prototype {\n    fun clone(): Prototype\n}\n\ndata class Shape(\n    var x: Int,\n    var y: Int,\n    var color: String\n) : Prototype {\n    override fun clone(): Shape = copy()\n}\n\n// 사용\nfun main() {\n    val original = Shape(10, 20, \"red\")\n    val cloned = original.clone()\n    cloned.color = \"blue\"\n    println(\"Original: $original\")\n    println(\"Cloned: $cloned\")\n}"
+      },
+      "diagram": "classDiagram\n    class Prototype {\n        <<interface>>\n        +clone(): Prototype\n    }\n    class ConcretePrototype1 {\n        +clone(): Prototype\n    }\n    class ConcretePrototype2 {\n        +clone(): Prototype\n    }\n    Prototype <|.. ConcretePrototype1\n    Prototype <|.. ConcretePrototype2"
+    },
+    {
+      "id": "adapter",
+      "name": "Adapter",
+      "koreanName": "어댑터",
+      "category": "structural",
+      "purpose": "호환되지 않는 인터페이스를 가진 클래스들이 함께 작동할 수 있도록 변환합니다.",
+      "characteristics": [
+        "인터페이스 변환",
+        "기존 클래스 재사용",
+        "클라이언트 코드 변경 불필요"
+      ],
+      "advantages": [
+        "기존 코드 재사용",
+        "단일 책임 원칙 준수",
+        "개방-폐쇄 원칙 준수"
+      ],
+      "disadvantages": [
+        "코드 복잡도 증가",
+        "성능 오버헤드 가능"
+      ],
+      "useCases": [
+        "레거시 시스템 통합",
+        "서드파티 라이브러리 래핑",
+        "데이터 포맷 변환"
+      ],
+      "difficulty": "medium",
+      "frequency": 5,
+      "relatedPatterns": ["bridge", "decorator", "proxy"],
+      "codeExamples": {
+        "kotlin": "interface Target {\n    fun request(): String\n}\n\nclass Adaptee {\n    fun specificRequest(): String = \"Adaptee의 특수 기능\"\n}\n\nclass Adapter(private val adaptee: Adaptee) : Target {\n    override fun request(): String = adaptee.specificRequest()\n}\n\n// 사용\nfun main() {\n    val adaptee = Adaptee()\n    val adapter = Adapter(adaptee)\n    println(adapter.request())\n}",
+        "java": "interface Target {\n    String request();\n}\n\nclass Adaptee {\n    public String specificRequest() {\n        return \"Adaptee의 특수 기능\";\n    }\n}\n\nclass Adapter implements Target {\n    private final Adaptee adaptee;\n\n    public Adapter(Adaptee adaptee) {\n        this.adaptee = adaptee;\n    }\n\n    @Override\n    public String request() {\n        return adaptee.specificRequest();\n    }\n}"
+      },
+      "diagram": "classDiagram\n    class Target {\n        <<interface>>\n        +request()\n    }\n    class Adapter {\n        -adaptee: Adaptee\n        +request()\n    }\n    class Adaptee {\n        +specificRequest()\n    }\n    Target <|.. Adapter\n    Adapter o-- Adaptee"
+    },
+    {
+      "id": "bridge",
+      "name": "Bridge",
+      "koreanName": "브리지",
+      "category": "structural",
+      "purpose": "추상화와 구현을 분리하여 독립적으로 변경할 수 있게 합니다.",
+      "characteristics": [
+        "추상화와 구현 분리",
+        "런타임에 구현 교체 가능",
+        "플랫폼 독립성"
+      ],
+      "advantages": [
+        "플랫폼 독립적 코드",
+        "개방-폐쇄 원칙 준수",
+        "단일 책임 원칙 준수"
+      ],
+      "disadvantages": [
+        "복잡도 증가",
+        "초기 설계 비용"
+      ],
+      "useCases": [
+        "크로스 플랫폼 앱",
+        "드라이버 인터페이스",
+        "GUI 프레임워크"
+      ],
+      "difficulty": "high",
+      "frequency": 3,
+      "relatedPatterns": ["adapter", "abstract_factory", "strategy"],
+      "codeExamples": {
+        "kotlin": "interface Device {\n    fun turnOn()\n    fun turnOff()\n    fun setVolume(volume: Int)\n}\n\nclass TV : Device {\n    override fun turnOn() = println(\"TV 켜기\")\n    override fun turnOff() = println(\"TV 끄기\")\n    override fun setVolume(volume: Int) = println(\"TV 볼륨: $volume\")\n}\n\nclass Radio : Device {\n    override fun turnOn() = println(\"라디오 켜기\")\n    override fun turnOff() = println(\"라디오 끄기\")\n    override fun setVolume(volume: Int) = println(\"라디오 볼륨: $volume\")\n}\n\nabstract class RemoteControl(protected val device: Device) {\n    open fun togglePower() {\n        device.turnOn()\n    }\n    open fun volumeUp() {\n        device.setVolume(10)\n    }\n}\n\nclass AdvancedRemote(device: Device) : RemoteControl(device) {\n    fun mute() = device.setVolume(0)\n}"
+      },
+      "diagram": "classDiagram\n    class Abstraction {\n        #implementor: Implementor\n        +operation()\n    }\n    class RefinedAbstraction {\n        +operation()\n    }\n    class Implementor {\n        <<interface>>\n        +operationImpl()\n    }\n    class ConcreteImplementorA {\n        +operationImpl()\n    }\n    class ConcreteImplementorB {\n        +operationImpl()\n    }\n    Abstraction <|-- RefinedAbstraction\n    Abstraction o-- Implementor\n    Implementor <|.. ConcreteImplementorA\n    Implementor <|.. ConcreteImplementorB"
+    },
+    {
+      "id": "composite",
+      "name": "Composite",
+      "koreanName": "복합체",
+      "category": "structural",
+      "purpose": "객체들을 트리 구조로 구성하여 부분-전체 계층을 나타냅니다.",
+      "characteristics": [
+        "트리 구조 표현",
+        "단일 객체와 복합 객체 동일 취급",
+        "재귀적 구조"
+      ],
+      "advantages": [
+        "복잡한 트리 구조 쉽게 구현",
+        "새로운 컴포넌트 추가 용이",
+        "클라이언트 코드 단순화"
+      ],
+      "disadvantages": [
+        "지나치게 일반적인 설계 가능",
+        "타입 제한 어려움"
+      ],
+      "useCases": [
+        "파일 시스템",
+        "UI 컴포넌트 트리",
+        "조직도"
+      ],
+      "difficulty": "medium",
+      "frequency": 4,
+      "relatedPatterns": ["decorator", "iterator", "visitor"],
+      "codeExamples": {
+        "kotlin": "interface Component {\n    fun operation(): String\n}\n\nclass Leaf(private val name: String) : Component {\n    override fun operation(): String = name\n}\n\nclass Composite(private val name: String) : Component {\n    private val children = mutableListOf<Component>()\n\n    fun add(component: Component) {\n        children.add(component)\n    }\n\n    override fun operation(): String {\n        val results = children.map { it.operation() }\n        return \"$name[${results.joinToString(\", \")}]\"\n    }\n}\n\n// 사용\nfun main() {\n    val tree = Composite(\"root\")\n    val branch1 = Composite(\"branch1\")\n    branch1.add(Leaf(\"leaf1\"))\n    branch1.add(Leaf(\"leaf2\"))\n    tree.add(branch1)\n    println(tree.operation())\n}"
+      },
+      "diagram": "classDiagram\n    class Component {\n        <<interface>>\n        +operation()\n    }\n    class Leaf {\n        +operation()\n    }\n    class Composite {\n        -children: List~Component~\n        +add(component)\n        +remove(component)\n        +operation()\n    }\n    Component <|.. Leaf\n    Component <|.. Composite\n    Composite o-- Component"
+    },
+    {
+      "id": "decorator",
+      "name": "Decorator",
+      "koreanName": "데코레이터",
+      "category": "structural",
+      "purpose": "객체에 동적으로 새로운 책임을 추가합니다.",
+      "characteristics": [
+        "동적 기능 추가",
+        "상속 대신 조합 사용",
+        "단일 책임 원칙"
+      ],
+      "advantages": [
+        "런타임에 기능 추가",
+        "단일 책임 원칙 준수",
+        "조합으로 다양한 기능 구현"
+      ],
+      "disadvantages": [
+        "많은 작은 객체 생성",
+        "래퍼 순서 의존성"
+      ],
+      "useCases": [
+        "I/O 스트림",
+        "GUI 컴포넌트 꾸미기",
+        "미들웨어 체인"
+      ],
+      "difficulty": "medium",
+      "frequency": 4,
+      "relatedPatterns": ["adapter", "composite", "strategy"],
+      "codeExamples": {
+        "kotlin": "interface Coffee {\n    fun cost(): Double\n    fun description(): String\n}\n\nclass SimpleCoffee : Coffee {\n    override fun cost() = 1.0\n    override fun description() = \"커피\"\n}\n\nabstract class CoffeeDecorator(private val coffee: Coffee) : Coffee {\n    override fun cost() = coffee.cost()\n    override fun description() = coffee.description()\n}\n\nclass Milk(coffee: Coffee) : CoffeeDecorator(coffee) {\n    override fun cost() = super.cost() + 0.5\n    override fun description() = super.description() + \" + 우유\"\n}\n\nclass Sugar(coffee: Coffee) : CoffeeDecorator(coffee) {\n    override fun cost() = super.cost() + 0.2\n    override fun description() = super.description() + \" + 설탕\"\n}\n\n// 사용\nfun main() {\n    var coffee: Coffee = SimpleCoffee()\n    coffee = Milk(coffee)\n    coffee = Sugar(coffee)\n    println(\"${coffee.description()}: ${coffee.cost()}원\")\n}"
+      },
+      "diagram": "classDiagram\n    class Component {\n        <<interface>>\n        +operation()\n    }\n    class ConcreteComponent {\n        +operation()\n    }\n    class Decorator {\n        <<abstract>>\n        #component: Component\n        +operation()\n    }\n    class ConcreteDecoratorA {\n        +operation()\n        +addedBehavior()\n    }\n    class ConcreteDecoratorB {\n        +operation()\n    }\n    Component <|.. ConcreteComponent\n    Component <|.. Decorator\n    Decorator <|-- ConcreteDecoratorA\n    Decorator <|-- ConcreteDecoratorB\n    Decorator o-- Component"
+    },
+    {
+      "id": "facade",
+      "name": "Facade",
+      "koreanName": "퍼사드",
+      "category": "structural",
+      "purpose": "복잡한 서브시스템에 대한 단순화된 인터페이스를 제공합니다.",
+      "characteristics": [
+        "서브시스템 간소화",
+        "계층화 지원",
+        "느슨한 결합"
+      ],
+      "advantages": [
+        "서브시스템 복잡도 숨김",
+        "느슨한 결합 촉진",
+        "서브시스템 독립적 진화"
+      ],
+      "disadvantages": [
+        "만능 객체가 될 위험",
+        "추가 추상화 계층"
+      ],
+      "useCases": [
+        "복잡한 라이브러리 래핑",
+        "레거시 시스템 통합",
+        "API 게이트웨이"
+      ],
+      "difficulty": "low",
+      "frequency": 5,
+      "relatedPatterns": ["adapter", "mediator", "singleton"],
+      "codeExamples": {
+        "kotlin": "class CPU {\n    fun freeze() = println(\"CPU 정지\")\n    fun execute() = println(\"CPU 실행\")\n}\n\nclass Memory {\n    fun load(position: Long, data: ByteArray) = println(\"메모리 로드\")\n}\n\nclass HardDrive {\n    fun read(lba: Long, size: Int): ByteArray = ByteArray(size)\n}\n\nclass ComputerFacade {\n    private val cpu = CPU()\n    private val memory = Memory()\n    private val hardDrive = HardDrive()\n\n    fun start() {\n        cpu.freeze()\n        memory.load(0L, hardDrive.read(0L, 1024))\n        cpu.execute()\n    }\n}\n\n// 사용\nfun main() {\n    val computer = ComputerFacade()\n    computer.start() // 복잡한 서브시스템을 간단히 사용\n}"
+      },
+      "diagram": "classDiagram\n    class Facade {\n        +operation()\n    }\n    class SubsystemA {\n        +operationA()\n    }\n    class SubsystemB {\n        +operationB()\n    }\n    class SubsystemC {\n        +operationC()\n    }\n    Facade ..> SubsystemA\n    Facade ..> SubsystemB\n    Facade ..> SubsystemC"
+    },
+    {
+      "id": "flyweight",
+      "name": "Flyweight",
+      "koreanName": "플라이웨이트",
+      "category": "structural",
+      "purpose": "많은 수의 유사한 객체를 효율적으로 지원하기 위해 공유를 사용합니다.",
+      "characteristics": [
+        "객체 공유로 메모리 절약",
+        "내부 상태와 외부 상태 분리",
+        "팩토리로 객체 관리"
+      ],
+      "advantages": [
+        "메모리 사용량 감소",
+        "많은 객체 효율적 관리"
+      ],
+      "disadvantages": [
+        "코드 복잡도 증가",
+        "외부 상태 계산 오버헤드"
+      ],
+      "useCases": [
+        "텍스트 편집기 문자 객체",
+        "게임 그래픽 객체",
+        "캐시 시스템"
+      ],
+      "difficulty": "high",
+      "frequency": 2,
+      "relatedPatterns": ["composite", "singleton", "state"],
+      "codeExamples": {
+        "kotlin": "class TreeType(\n    val name: String,\n    val color: String,\n    val texture: String\n) {\n    fun draw(x: Int, y: Int) {\n        println(\"$name 나무를 ($x, $y)에 그림\")\n    }\n}\n\nobject TreeFactory {\n    private val treeTypes = mutableMapOf<String, TreeType>()\n\n    fun getTreeType(name: String, color: String, texture: String): TreeType {\n        val key = \"$name-$color-$texture\"\n        return treeTypes.getOrPut(key) {\n            TreeType(name, color, texture)\n        }\n    }\n}\n\nclass Tree(\n    private val x: Int,\n    private val y: Int,\n    private val type: TreeType\n) {\n    fun draw() = type.draw(x, y)\n}\n\n// 사용 - 수천 개의 나무가 있어도 타입은 공유됨\nfun main() {\n    val oakType = TreeFactory.getTreeType(\"참나무\", \"녹색\", \"거친\")\n    val tree1 = Tree(10, 20, oakType)\n    val tree2 = Tree(30, 40, oakType)\n}"
+      },
+      "diagram": "classDiagram\n    class Flyweight {\n        <<interface>>\n        +operation(extrinsicState)\n    }\n    class ConcreteFlyweight {\n        -intrinsicState\n        +operation(extrinsicState)\n    }\n    class FlyweightFactory {\n        -flyweights: Map\n        +getFlyweight(key): Flyweight\n    }\n    Flyweight <|.. ConcreteFlyweight\n    FlyweightFactory o-- Flyweight"
+    },
+    {
+      "id": "proxy",
+      "name": "Proxy",
+      "koreanName": "프록시",
+      "category": "structural",
+      "purpose": "다른 객체에 대한 접근을 제어하는 대리자를 제공합니다.",
+      "characteristics": [
+        "접근 제어",
+        "지연 초기화",
+        "로깅, 캐싱 등 부가 기능"
+      ],
+      "advantages": [
+        "실제 객체 접근 제어",
+        "지연 초기화로 리소스 절약",
+        "부가 기능 투명하게 추가"
+      ],
+      "disadvantages": [
+        "코드 복잡도 증가",
+        "응답 시간 지연 가능"
+      ],
+      "useCases": [
+        "이미지 지연 로딩",
+        "권한 검사",
+        "원격 프록시"
+      ],
+      "difficulty": "medium",
+      "frequency": 4,
+      "relatedPatterns": ["adapter", "decorator"],
+      "codeExamples": {
+        "kotlin": "interface Image {\n    fun display()\n}\n\nclass RealImage(private val fileName: String) : Image {\n    init {\n        loadFromDisk()\n    }\n\n    private fun loadFromDisk() {\n        println(\"Loading $fileName from disk...\")\n    }\n\n    override fun display() {\n        println(\"Displaying $fileName\")\n    }\n}\n\nclass ProxyImage(private val fileName: String) : Image {\n    private var realImage: RealImage? = null\n\n    override fun display() {\n        if (realImage == null) {\n            realImage = RealImage(fileName)\n        }\n        realImage?.display()\n    }\n}\n\n// 사용 - 이미지가 실제로 표시될 때만 로드됨\nval image = ProxyImage(\"photo.jpg\")\nimage.display()  // 이때 로드됨\nimage.display()  // 캐시된 이미지 사용"
+      },
+      "diagram": "classDiagram\n    class Subject {\n        <<interface>>\n        +request()\n    }\n    class RealSubject {\n        +request()\n    }\n    class Proxy {\n        -realSubject: RealSubject\n        +request()\n    }\n    Subject <|.. RealSubject\n    Subject <|.. Proxy\n    Proxy o-- RealSubject"
+    },
+    {
+      "id": "chain_of_responsibility",
+      "name": "Chain of Responsibility",
+      "koreanName": "책임 연쇄",
+      "category": "behavioral",
+      "purpose": "요청을 처리할 수 있는 기회를 여러 객체에게 부여합니다.",
+      "characteristics": [
+        "요청 처리자 체인",
+        "느슨한 결합",
+        "동적으로 처리자 변경"
+      ],
+      "advantages": [
+        "요청 발신자와 수신자 분리",
+        "처리자 동적 추가/제거",
+        "단일 책임 원칙"
+      ],
+      "disadvantages": [
+        "요청 처리 보장 안됨",
+        "디버깅 어려움"
+      ],
+      "useCases": [
+        "이벤트 처리",
+        "미들웨어",
+        "로깅 레벨"
+      ],
+      "difficulty": "medium",
+      "frequency": 3,
+      "relatedPatterns": ["command", "composite", "decorator"],
+      "codeExamples": {
+        "kotlin": "abstract class Handler {\n    protected var next: Handler? = null\n\n    fun setNext(handler: Handler): Handler {\n        next = handler\n        return handler\n    }\n\n    abstract fun handle(request: String): String?\n}\n\nclass AuthHandler : Handler() {\n    override fun handle(request: String): String? {\n        return if (request.contains(\"auth\")) {\n            \"인증 처리됨\"\n        } else {\n            next?.handle(request)\n        }\n    }\n}\n\nclass LogHandler : Handler() {\n    override fun handle(request: String): String? {\n        println(\"로그: $request\")\n        return next?.handle(request)\n    }\n}\n\n// 사용\nfun main() {\n    val log = LogHandler()\n    val auth = AuthHandler()\n    log.setNext(auth)\n    println(log.handle(\"auth request\"))\n}"
+      },
+      "diagram": "classDiagram\n    class Handler {\n        <<abstract>>\n        #successor: Handler\n        +handleRequest()\n        +setSuccessor(handler)\n    }\n    class ConcreteHandler1 {\n        +handleRequest()\n    }\n    class ConcreteHandler2 {\n        +handleRequest()\n    }\n    Handler <|-- ConcreteHandler1\n    Handler <|-- ConcreteHandler2\n    Handler o-- Handler"
+    },
+    {
+      "id": "command",
+      "name": "Command",
+      "koreanName": "커맨드",
+      "category": "behavioral",
+      "purpose": "요청을 객체로 캡슐화하여 매개변수화, 대기열, 로깅, 취소 기능을 지원합니다.",
+      "characteristics": [
+        "요청을 객체로 캡슐화",
+        "실행 취소/다시 실행 지원",
+        "요청 대기열 및 로깅"
+      ],
+      "advantages": [
+        "발신자와 수신자 분리",
+        "실행 취소 구현 용이",
+        "작업 조합 가능"
+      ],
+      "disadvantages": [
+        "클래스 수 증가",
+        "복잡도 증가"
+      ],
+      "useCases": [
+        "에디터 실행 취소",
+        "트랜잭션",
+        "매크로 기록"
+      ],
+      "difficulty": "medium",
+      "frequency": 4,
+      "relatedPatterns": ["chain_of_responsibility", "memento", "strategy"],
+      "codeExamples": {
+        "kotlin": "interface Command {\n    fun execute()\n    fun undo()\n}\n\nclass Light {\n    fun on() = println(\"불이 켜졌습니다\")\n    fun off() = println(\"불이 꺼졌습니다\")\n}\n\nclass LightOnCommand(private val light: Light) : Command {\n    override fun execute() = light.on()\n    override fun undo() = light.off()\n}\n\nclass LightOffCommand(private val light: Light) : Command {\n    override fun execute() = light.off()\n    override fun undo() = light.on()\n}\n\nclass RemoteControl {\n    private val history = mutableListOf<Command>()\n\n    fun execute(command: Command) {\n        command.execute()\n        history.add(command)\n    }\n\n    fun undo() {\n        if (history.isNotEmpty()) {\n            history.removeLast().undo()\n        }\n    }\n}\n\n// 사용\nfun main() {\n    val light = Light()\n    val remote = RemoteControl()\n\n    remote.execute(LightOnCommand(light))\n    remote.execute(LightOffCommand(light))\n    remote.undo()  // 불이 다시 켜짐\n}"
+      },
+      "diagram": "classDiagram\n    class Command {\n        <<interface>>\n        +execute()\n        +undo()\n    }\n    class ConcreteCommand {\n        -receiver: Receiver\n        +execute()\n        +undo()\n    }\n    class Invoker {\n        -command: Command\n        +setCommand()\n        +executeCommand()\n    }\n    class Receiver {\n        +action()\n    }\n    Command <|.. ConcreteCommand\n    Invoker o-- Command\n    ConcreteCommand o-- Receiver"
+    },
+    {
+      "id": "iterator",
+      "name": "Iterator",
+      "koreanName": "반복자",
+      "category": "behavioral",
+      "purpose": "컬렉션의 내부 표현을 노출하지 않고 요소에 순차적으로 접근합니다.",
+      "characteristics": [
+        "컬렉션 순회 추상화",
+        "내부 구조 숨김",
+        "다양한 순회 방법 지원"
+      ],
+      "advantages": [
+        "컬렉션 내부 구조 숨김",
+        "여러 순회 동시 지원",
+        "단일 책임 원칙"
+      ],
+      "disadvantages": [
+        "간단한 컬렉션에는 과도함",
+        "직접 접근보다 비효율적일 수 있음"
+      ],
+      "useCases": [
+        "트리 순회",
+        "그래프 탐색",
+        "커스텀 컬렉션"
+      ],
+      "difficulty": "medium",
+      "frequency": 5,
+      "relatedPatterns": ["composite", "visitor", "memento"],
+      "codeExamples": {
+        "kotlin": "interface Iterator<T> {\n    fun hasNext(): Boolean\n    fun next(): T\n}\n\nclass NumberCollection(private val numbers: List<Int>) {\n    fun createIterator(): Iterator<Int> = NumberIterator()\n\n    private inner class NumberIterator : Iterator<Int> {\n        private var index = 0\n\n        override fun hasNext(): Boolean = index < numbers.size\n\n        override fun next(): Int = numbers[index++]\n    }\n}\n\n// Kotlin에서는 Iterable 인터페이스를 활용\nclass TreeNode<T>(val value: T) : Iterable<T> {\n    val children = mutableListOf<TreeNode<T>>()\n\n    override fun iterator(): kotlin.collections.Iterator<T> = iterator {\n        yield(value)\n        children.forEach { yieldAll(it) }\n    }\n}"
+      },
+      "diagram": "classDiagram\n    class Iterator {\n        <<interface>>\n        +hasNext(): boolean\n        +next(): Object\n    }\n    class ConcreteIterator {\n        -collection\n        -index\n        +hasNext(): boolean\n        +next(): Object\n    }\n    class Aggregate {\n        <<interface>>\n        +createIterator(): Iterator\n    }\n    class ConcreteAggregate {\n        +createIterator(): Iterator\n    }\n    Iterator <|.. ConcreteIterator\n    Aggregate <|.. ConcreteAggregate\n    ConcreteAggregate ..> ConcreteIterator"
+    },
+    {
+      "id": "mediator",
+      "name": "Mediator",
+      "koreanName": "중재자",
+      "category": "behavioral",
+      "purpose": "객체 간의 복잡한 통신을 캡슐화하여 느슨한 결합을 촉진합니다.",
+      "characteristics": [
+        "객체 간 통신 중앙화",
+        "느슨한 결합",
+        "상호작용 캡슐화"
+      ],
+      "advantages": [
+        "객체 간 의존성 감소",
+        "객체 재사용성 향상",
+        "상호작용 관리 용이"
+      ],
+      "disadvantages": [
+        "중재자가 복잡해질 수 있음",
+        "단일 실패 지점"
+      ],
+      "useCases": [
+        "UI 컴포넌트 간 통신",
+        "채팅 서버",
+        "이벤트 버스"
+      ],
+      "difficulty": "medium",
+      "frequency": 3,
+      "relatedPatterns": ["facade", "observer", "command"],
+      "codeExamples": {
+        "kotlin": "interface Mediator {\n    fun notify(sender: Component, event: String)\n}\n\nabstract class Component(protected val mediator: Mediator) {\n    abstract fun receive(message: String)\n}\n\nclass Button(mediator: Mediator) : Component(mediator) {\n    fun click() {\n        mediator.notify(this, \"click\")\n    }\n\n    override fun receive(message: String) {\n        println(\"Button 수신: $message\")\n    }\n}\n\nclass TextBox(mediator: Mediator) : Component(mediator) {\n    var text: String = \"\"\n\n    override fun receive(message: String) {\n        text = message\n        println(\"TextBox 수신: $message\")\n    }\n}\n\nclass DialogMediator : Mediator {\n    lateinit var button: Button\n    lateinit var textBox: TextBox\n\n    override fun notify(sender: Component, event: String) {\n        when {\n            sender is Button && event == \"click\" -> {\n                textBox.receive(\"버튼이 클릭됨\")\n            }\n        }\n    }\n}"
+      },
+      "diagram": "classDiagram\n    class Mediator {\n        <<interface>>\n        +notify(sender, event)\n    }\n    class ConcreteMediator {\n        -componentA\n        -componentB\n        +notify(sender, event)\n    }\n    class Component {\n        #mediator: Mediator\n    }\n    class ComponentA {\n        +operationA()\n    }\n    class ComponentB {\n        +operationB()\n    }\n    Mediator <|.. ConcreteMediator\n    Component <|-- ComponentA\n    Component <|-- ComponentB\n    ConcreteMediator o-- ComponentA\n    ConcreteMediator o-- ComponentB"
+    },
+    {
+      "id": "memento",
+      "name": "Memento",
+      "koreanName": "메멘토",
+      "category": "behavioral",
+      "purpose": "객체의 이전 상태를 저장하고 복원할 수 있게 합니다.",
+      "characteristics": [
+        "상태 저장 및 복원",
+        "캡슐화 유지",
+        "실행 취소 기능 지원"
+      ],
+      "advantages": [
+        "상태 스냅샷 생성",
+        "캡슐화 위반 없이 상태 저장",
+        "실행 취소 간편 구현"
+      ],
+      "disadvantages": [
+        "메모리 사용량 증가",
+        "동적 언어에서 캡슐화 보장 어려움"
+      ],
+      "useCases": [
+        "에디터 실행 취소",
+        "게임 저장",
+        "트랜잭션 롤백"
+      ],
+      "difficulty": "medium",
+      "frequency": 3,
+      "relatedPatterns": ["command", "iterator"],
+      "codeExamples": {
+        "kotlin": "data class Memento(val state: String)\n\nclass Editor {\n    var content: String = \"\"\n\n    fun save(): Memento = Memento(content)\n\n    fun restore(memento: Memento) {\n        content = memento.state\n    }\n}\n\nclass History {\n    private val mementos = mutableListOf<Memento>()\n\n    fun push(memento: Memento) {\n        mementos.add(memento)\n    }\n\n    fun pop(): Memento? = mementos.removeLastOrNull()\n}\n\n// 사용\nfun main() {\n    val editor = Editor()\n    val history = History()\n\n    editor.content = \"버전 1\"\n    history.push(editor.save())\n\n    editor.content = \"버전 2\"\n    history.push(editor.save())\n\n    editor.content = \"버전 3\"\n\n    // 실행 취소\n    history.pop()?.let { editor.restore(it) }\n    println(editor.content)  // 버전 2\n}"
+      },
+      "diagram": "classDiagram\n    class Originator {\n        -state\n        +createMemento(): Memento\n        +restore(memento)\n    }\n    class Memento {\n        -state\n        +getState()\n    }\n    class Caretaker {\n        -mementos: List~Memento~\n        +addMemento(memento)\n        +getMemento(index): Memento\n    }\n    Originator ..> Memento\n    Caretaker o-- Memento"
+    },
+    {
+      "id": "observer",
+      "name": "Observer",
+      "koreanName": "옵저버",
+      "category": "behavioral",
+      "purpose": "객체 상태가 변경되면 의존 객체들에게 자동으로 통지합니다.",
+      "characteristics": [
+        "일대다 의존성",
+        "자동 상태 동기화",
+        "느슨한 결합"
+      ],
+      "advantages": [
+        "느슨한 결합",
+        "개방-폐쇄 원칙 준수",
+        "런타임에 관계 변경 가능"
+      ],
+      "disadvantages": [
+        "통지 순서 보장 안됨",
+        "메모리 누수 가능"
+      ],
+      "useCases": [
+        "이벤트 처리",
+        "데이터 바인딩",
+        "알림 시스템"
+      ],
+      "difficulty": "low",
+      "frequency": 5,
+      "relatedPatterns": ["mediator", "singleton"],
+      "codeExamples": {
+        "kotlin": "interface Observer {\n    fun update(message: String)\n}\n\nclass Subject {\n    private val observers = mutableListOf<Observer>()\n\n    fun attach(observer: Observer) {\n        observers.add(observer)\n    }\n\n    fun detach(observer: Observer) {\n        observers.remove(observer)\n    }\n\n    fun notifyObservers(message: String) {\n        observers.forEach { it.update(message) }\n    }\n}\n\nclass ConcreteObserver(private val name: String) : Observer {\n    override fun update(message: String) {\n        println(\"$name 수신: $message\")\n    }\n}\n\n// 사용\nfun main() {\n    val subject = Subject()\n    val observer1 = ConcreteObserver(\"Observer1\")\n    val observer2 = ConcreteObserver(\"Observer2\")\n\n    subject.attach(observer1)\n    subject.attach(observer2)\n    subject.notifyObservers(\"Hello!\")\n}",
+        "java": "import java.util.ArrayList;\nimport java.util.List;\n\ninterface Observer {\n    void update(String message);\n}\n\nclass Subject {\n    private List<Observer> observers = new ArrayList<>();\n\n    public void attach(Observer observer) {\n        observers.add(observer);\n    }\n\n    public void notifyObservers(String message) {\n        for (Observer observer : observers) {\n            observer.update(message);\n        }\n    }\n}"
+      },
+      "diagram": "classDiagram\n    class Subject {\n        -observers: List~Observer~\n        +attach(observer)\n        +detach(observer)\n        +notifyObservers()\n    }\n    class Observer {\n        <<interface>>\n        +update()\n    }\n    class ConcreteObserver {\n        +update()\n    }\n    Subject o-- Observer\n    Observer <|.. ConcreteObserver"
+    },
+    {
+      "id": "state",
+      "name": "State",
+      "koreanName": "상태",
+      "category": "behavioral",
+      "purpose": "객체의 내부 상태에 따라 동작을 변경합니다.",
+      "characteristics": [
+        "상태에 따른 동작 변경",
+        "상태 전이 캡슐화",
+        "조건문 대체"
+      ],
+      "advantages": [
+        "상태별 코드 분리",
+        "단일 책임 원칙",
+        "개방-폐쇄 원칙"
+      ],
+      "disadvantages": [
+        "상태 수가 적으면 과도함",
+        "상태 전이 복잡성"
+      ],
+      "useCases": [
+        "주문 상태 관리",
+        "미디어 플레이어",
+        "워크플로우 엔진"
+      ],
+      "difficulty": "medium",
+      "frequency": 4,
+      "relatedPatterns": ["strategy", "flyweight", "singleton"],
+      "codeExamples": {
+        "kotlin": "interface State {\n    fun handle(context: Context)\n}\n\nclass Context {\n    var state: State = ConcreteStateA()\n\n    fun request() {\n        state.handle(this)\n    }\n}\n\nclass ConcreteStateA : State {\n    override fun handle(context: Context) {\n        println(\"State A 처리 → State B로 전이\")\n        context.state = ConcreteStateB()\n    }\n}\n\nclass ConcreteStateB : State {\n    override fun handle(context: Context) {\n        println(\"State B 처리 → State A로 전이\")\n        context.state = ConcreteStateA()\n    }\n}\n\n// 사용\nfun main() {\n    val context = Context()\n    context.request()  // State A → B\n    context.request()  // State B → A\n    context.request()  // State A → B\n}"
+      },
+      "diagram": "classDiagram\n    class Context {\n        -state: State\n        +request()\n        +setState(state)\n    }\n    class State {\n        <<interface>>\n        +handle(context)\n    }\n    class ConcreteStateA {\n        +handle(context)\n    }\n    class ConcreteStateB {\n        +handle(context)\n    }\n    Context o-- State\n    State <|.. ConcreteStateA\n    State <|.. ConcreteStateB"
+    },
+    {
+      "id": "strategy",
+      "name": "Strategy",
+      "koreanName": "전략",
+      "category": "behavioral",
+      "purpose": "알고리즘을 캡슐화하여 런타임에 교체 가능하게 합니다.",
+      "characteristics": [
+        "알고리즘 캡슐화",
+        "런타임 알고리즘 교체",
+        "조건문 대체"
+      ],
+      "advantages": [
+        "런타임에 알고리즘 교체",
+        "개방-폐쇄 원칙 준수",
+        "조건문 제거"
+      ],
+      "disadvantages": [
+        "전략 수만큼 클래스 증가",
+        "클라이언트가 전략 알아야 함"
+      ],
+      "useCases": [
+        "정렬 알고리즘",
+        "결제 방법",
+        "압축 알고리즘"
+      ],
+      "difficulty": "low",
+      "frequency": 5,
+      "relatedPatterns": ["state", "template_method", "decorator"],
+      "codeExamples": {
+        "kotlin": "interface PaymentStrategy {\n    fun pay(amount: Int)\n}\n\nclass CreditCardStrategy(private val cardNumber: String) : PaymentStrategy {\n    override fun pay(amount: Int) {\n        println(\"${amount}원을 신용카드($cardNumber)로 결제\")\n    }\n}\n\nclass KakaoPayStrategy(private val phoneNumber: String) : PaymentStrategy {\n    override fun pay(amount: Int) {\n        println(\"${amount}원을 카카오페이($phoneNumber)로 결제\")\n    }\n}\n\nclass ShoppingCart {\n    private var paymentStrategy: PaymentStrategy? = null\n\n    fun setPaymentStrategy(strategy: PaymentStrategy) {\n        paymentStrategy = strategy\n    }\n\n    fun checkout(amount: Int) {\n        paymentStrategy?.pay(amount)\n    }\n}\n\n// 사용\nfun main() {\n    val cart = ShoppingCart()\n\n    cart.setPaymentStrategy(CreditCardStrategy(\"1234-5678\"))\n    cart.checkout(10000)\n\n    cart.setPaymentStrategy(KakaoPayStrategy(\"010-1234-5678\"))\n    cart.checkout(20000)\n}"
+      },
+      "diagram": "classDiagram\n    class Context {\n        -strategy: Strategy\n        +setStrategy(strategy)\n        +executeStrategy()\n    }\n    class Strategy {\n        <<interface>>\n        +execute()\n    }\n    class ConcreteStrategyA {\n        +execute()\n    }\n    class ConcreteStrategyB {\n        +execute()\n    }\n    Context o-- Strategy\n    Strategy <|.. ConcreteStrategyA\n    Strategy <|.. ConcreteStrategyB"
+    },
+    {
+      "id": "template_method",
+      "name": "Template Method",
+      "koreanName": "템플릿 메서드",
+      "category": "behavioral",
+      "purpose": "알고리즘의 골격을 정의하고 일부 단계를 서브클래스에서 재정의합니다.",
+      "characteristics": [
+        "알고리즘 골격 정의",
+        "일부 단계 재정의",
+        "헐리우드 원칙"
+      ],
+      "advantages": [
+        "코드 중복 제거",
+        "알고리즘 구조 유지",
+        "확장 포인트 제공"
+      ],
+      "disadvantages": [
+        "상속 필요",
+        "서브클래스가 많아질 수 있음"
+      ],
+      "useCases": [
+        "데이터 처리 파이프라인",
+        "테스트 프레임워크",
+        "게임 루프"
+      ],
+      "difficulty": "medium",
+      "frequency": 4,
+      "relatedPatterns": ["factory_method", "strategy"],
+      "codeExamples": {
+        "kotlin": "abstract class DataMiner {\n    // 템플릿 메서드 (final로 선언하여 오버라이드 방지)\n    fun mine(path: String) {\n        val file = openFile(path)\n        val rawData = extractData(file)\n        val data = parseData(rawData)\n        val analysis = analyzeData(data)\n        sendReport(analysis)\n        closeFile(file)\n    }\n\n    abstract fun openFile(path: String): String\n    abstract fun extractData(file: String): String\n    abstract fun parseData(rawData: String): String\n\n    // 기본 구현 제공 (선택적 오버라이드)\n    open fun analyzeData(data: String): String = \"분석 결과: $data\"\n    open fun sendReport(analysis: String) = println(\"Report: $analysis\")\n    open fun closeFile(file: String) = println(\"파일 닫기\")\n}\n\nclass PDFDataMiner : DataMiner() {\n    override fun openFile(path: String) = \"PDF: $path\"\n    override fun extractData(file: String) = \"PDF 데이터\"\n    override fun parseData(rawData: String) = \"파싱된 $rawData\"\n}\n\nclass CSVDataMiner : DataMiner() {\n    override fun openFile(path: String) = \"CSV: $path\"\n    override fun extractData(file: String) = \"CSV 데이터\"\n    override fun parseData(rawData: String) = \"파싱된 $rawData\"\n}"
+      },
+      "diagram": "classDiagram\n    class AbstractClass {\n        <<abstract>>\n        +templateMethod()\n        #primitiveOperation1()*\n        #primitiveOperation2()*\n        #hook()\n    }\n    class ConcreteClass {\n        #primitiveOperation1()\n        #primitiveOperation2()\n    }\n    AbstractClass <|-- ConcreteClass"
+    },
+    {
+      "id": "visitor",
+      "name": "Visitor",
+      "koreanName": "비지터",
+      "category": "behavioral",
+      "purpose": "객체 구조에서 수행할 연산을 별도의 객체로 분리합니다.",
+      "characteristics": [
+        "연산과 구조 분리",
+        "더블 디스패치",
+        "새 연산 추가 용이"
+      ],
+      "advantages": [
+        "새로운 연산 추가 용이",
+        "관련 연산 그룹화",
+        "구조 변경 없이 기능 추가"
+      ],
+      "disadvantages": [
+        "새 요소 추가 어려움",
+        "캡슐화 위반 가능"
+      ],
+      "useCases": [
+        "컴파일러 AST 처리",
+        "문서 내보내기",
+        "복잡한 객체 구조 연산"
+      ],
+      "difficulty": "high",
+      "frequency": 2,
+      "relatedPatterns": ["composite", "iterator"],
+      "codeExamples": {
+        "kotlin": "interface Element {\n    fun accept(visitor: Visitor)\n}\n\nclass ConcreteElementA : Element {\n    override fun accept(visitor: Visitor) {\n        visitor.visitElementA(this)\n    }\n\n    fun operationA() = \"A 연산\"\n}\n\nclass ConcreteElementB : Element {\n    override fun accept(visitor: Visitor) {\n        visitor.visitElementB(this)\n    }\n\n    fun operationB() = \"B 연산\"\n}\n\ninterface Visitor {\n    fun visitElementA(element: ConcreteElementA)\n    fun visitElementB(element: ConcreteElementB)\n}\n\nclass ConcreteVisitor : Visitor {\n    override fun visitElementA(element: ConcreteElementA) {\n        println(\"A 방문: ${element.operationA()}\")\n    }\n\n    override fun visitElementB(element: ConcreteElementB) {\n        println(\"B 방문: ${element.operationB()}\")\n    }\n}\n\n// 사용\nfun main() {\n    val elements = listOf(ConcreteElementA(), ConcreteElementB())\n    val visitor = ConcreteVisitor()\n    elements.forEach { it.accept(visitor) }\n}"
+      },
+      "diagram": "classDiagram\n    class Visitor {\n        <<interface>>\n        +visitElementA(element)\n        +visitElementB(element)\n    }\n    class ConcreteVisitor {\n        +visitElementA(element)\n        +visitElementB(element)\n    }\n    class Element {\n        <<interface>>\n        +accept(visitor)\n    }\n    class ConcreteElementA {\n        +accept(visitor)\n        +operationA()\n    }\n    class ConcreteElementB {\n        +accept(visitor)\n        +operationB()\n    }\n    Visitor <|.. ConcreteVisitor\n    Element <|.. ConcreteElementA\n    Element <|.. ConcreteElementB"
+    },
+    {
+      "id": "interpreter",
+      "name": "Interpreter",
+      "koreanName": "인터프리터",
+      "category": "behavioral",
+      "purpose": "언어의 문법을 정의하고 해석하는 방법을 제공합니다.",
+      "characteristics": [
+        "문법 표현",
+        "언어 해석",
+        "AST 기반"
+      ],
+      "advantages": [
+        "문법 구현 용이",
+        "문법 확장 용이",
+        "표현식 평가 유연"
+      ],
+      "disadvantages": [
+        "복잡한 문법에는 비효율",
+        "성능 문제 가능"
+      ],
+      "useCases": [
+        "DSL 구현",
+        "정규 표현식 처리",
+        "수학 표현식 계산기"
+      ],
+      "difficulty": "high",
+      "frequency": 1,
+      "relatedPatterns": ["composite", "visitor", "flyweight"],
+      "codeExamples": {
+        "kotlin": "interface Expression {\n    fun interpret(context: Map<String, Int>): Int\n}\n\nclass NumberExpression(private val number: Int) : Expression {\n    override fun interpret(context: Map<String, Int>): Int = number\n}\n\nclass VariableExpression(private val name: String) : Expression {\n    override fun interpret(context: Map<String, Int>): Int =\n        context[name] ?: throw IllegalArgumentException(\"변수 $name 없음\")\n}\n\nclass AddExpression(\n    private val left: Expression,\n    private val right: Expression\n) : Expression {\n    override fun interpret(context: Map<String, Int>): Int =\n        left.interpret(context) + right.interpret(context)\n}\n\nclass SubtractExpression(\n    private val left: Expression,\n    private val right: Expression\n) : Expression {\n    override fun interpret(context: Map<String, Int>): Int =\n        left.interpret(context) - right.interpret(context)\n}\n\n// 사용: x + y - 5\nfun main() {\n    val context = mapOf(\"x\" to 10, \"y\" to 5)\n    val expression = SubtractExpression(\n        AddExpression(\n            VariableExpression(\"x\"),\n            VariableExpression(\"y\")\n        ),\n        NumberExpression(5)\n    )\n    println(expression.interpret(context))  // 10\n}"
+      },
+      "diagram": "classDiagram\n    class AbstractExpression {\n        <<interface>>\n        +interpret(context)\n    }\n    class TerminalExpression {\n        +interpret(context)\n    }\n    class NonterminalExpression {\n        -expressions: List~AbstractExpression~\n        +interpret(context)\n    }\n    class Context {\n        +lookup(name)\n    }\n    AbstractExpression <|.. TerminalExpression\n    AbstractExpression <|.. NonterminalExpression\n    NonterminalExpression o-- AbstractExpression"
+    }
+  ],
+  "categories": {
+    "creational": {
+      "name": "생성 패턴",
+      "description": "객체 생성 메커니즘을 다루며, 상황에 맞는 방식으로 객체를 생성합니다.",
+      "patterns": ["singleton", "factory_method", "abstract_factory", "builder", "prototype"]
+    },
+    "structural": {
+      "name": "구조 패턴",
+      "description": "클래스와 객체를 더 큰 구조로 조합하는 방법을 다룹니다.",
+      "patterns": ["adapter", "bridge", "composite", "decorator", "facade", "flyweight", "proxy"]
+    },
+    "behavioral": {
+      "name": "행위 패턴",
+      "description": "객체 간의 알고리즘과 책임 분배를 다룹니다.",
+      "patterns": ["chain_of_responsibility", "command", "iterator", "mediator", "memento", "observer", "state", "strategy", "template_method", "visitor", "interpreter"]
+    }
+  }
+}
