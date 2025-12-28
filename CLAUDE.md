@@ -31,6 +31,24 @@ GoF 23개 디자인 패턴 및 73개 알고리즘 참조 앱. 개발자가 패�
 ./gradlew generateCommonMainCodeBlueprintDatabaseInterface
 ```
 
+### 배포 빌드
+
+```bash
+# 전체 빌드 + 결과물 수집 (build/outputs/에 수집)
+./gradlew buildAndCollect
+
+# 개별 태스크
+./gradlew collectOutputs   # 빌드 결과물 수집
+./gradlew cleanOutputs     # outputs 폴더 정리
+```
+
+**결과물 경로:**
+- `build/outputs/desktop/app/` - macOS .app 번들
+- `build/outputs/desktop/dmg/` - macOS .dmg 설치 이미지
+- `build/outputs/desktop/jar/` - 실행 가능한 FatJar
+- `build/outputs/android/debug/` - Android Debug APK
+- `build/outputs/android/release/` - Android Release APK
+
 ### Android 빌드 요구사항
 
 - Android SDK 설치 필요 (API 35 이상)

@@ -51,6 +51,7 @@ tasks.register("buildAndCollect") {
     group = "distribution"
     description = "전체 빌드 후 결과물 수집"
 
+    dependsOn("cleanOutputs")
     dependsOn(
         ":desktopApp:createDistributable",
         ":desktopApp:packageDmg",

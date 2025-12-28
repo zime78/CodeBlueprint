@@ -64,6 +64,21 @@ sealed class CodePlaygroundEvent {
     data object OnResetCode : CodePlaygroundEvent()
 
     /**
+     * 코드 복사
+     */
+    data object OnCopyCode : CodePlaygroundEvent()
+
+    /**
+     * 출력 복사
+     */
+    data object OnCopyOutput : CodePlaygroundEvent()
+
+    /**
+     * 복사 메시지 초기화
+     */
+    data object OnClearCopyMessage : CodePlaygroundEvent()
+
+    /**
      * 뒤로 가기
      */
     data object OnBackClick : CodePlaygroundEvent()

@@ -165,6 +165,32 @@ open iosApp/iosApp.xcodeproj
 ./gradlew build
 ```
 
+### 배포 빌드
+
+```bash
+# 전체 빌드 + 결과물 수집 (권장)
+./gradlew buildAndCollect
+
+# 개별 빌드 후 수집
+./gradlew desktopApp:createDistributable desktopApp:packageDmg androidApp:assembleDebug collectOutputs
+
+# outputs 폴더 정리
+./gradlew cleanOutputs
+```
+
+빌드 결과물은 `build/outputs/` 폴더에 수집됩니다:
+
+```
+build/outputs/
+├── desktop/
+│   ├── app/    → CodeBlueprint.app (macOS 앱 번들)
+│   ├── dmg/    → CodeBlueprint-1.0.0.dmg (설치 이미지)
+│   └── jar/    → FatJar (실행 가능한 JAR)
+└── android/
+    ├── debug/  → androidApp-debug.apk
+    └── release/→ androidApp-release.apk
+```
+
 ---
 
 ## 프로젝트 구조

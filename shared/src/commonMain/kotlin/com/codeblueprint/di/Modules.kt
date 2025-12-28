@@ -148,7 +148,7 @@ val presentationModule = module {
     }
 
     // Code Playground ViewModel
-    factory { CodePlaygroundViewModel(get()) }
+    factory { CodePlaygroundViewModel(get(), get()) }
 
     // Algorithm ViewModels
     factory { AlgorithmListViewModel(get(), get()) }
