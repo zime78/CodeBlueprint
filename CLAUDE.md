@@ -118,11 +118,9 @@ UI (Screen) → ViewModel → UseCase → Repository → SQLDelight
 
 | 화면 | 파일 | 설명 |
 | ---- | ---- | ---- |
-| 패턴 목록 | `ui/pattern/list/PatternListScreen.kt` | 카테고리별 패턴 목록, 북마크 빠른 접근 |
+| 메인 (탭) | `ui/main/MainScreen.kt` | 탭 기반 홈: 패턴/알고리즘/아키텍처 목록 (개수 표시) |
 | 패턴 상세 | `ui/pattern/detail/PatternDetailScreen.kt` | 패턴 설명, 코드 예시, 관련 패턴 |
-| 알고리즘 목록 | `ui/algorithm/list/AlgorithmListScreen.kt` | 카테고리별 알고리즘 목록, 북마크 빠른 접근 |
 | 알고리즘 상세 | `ui/algorithm/detail/AlgorithmDetailScreen.kt` | 알고리즘 설명, 코드 예시, 복잡도 정보 |
-| 아키텍처 목록 | `ui/architecture/list/ArchitectureListScreen.kt` | 5개 아키텍처 패턴 비교 |
 | 아키텍처 상세 | `ui/architecture/detail/ArchitectureDetailScreen.kt` | 계층 설명, 다이어그램, 비교 메트릭 |
 | 코드 플레이그라운드 | `ui/playground/CodePlaygroundScreen.kt` | 코드 편집 및 실행 시뮬레이션 |
 | 통합 검색 | `ui/search/SearchScreen.kt` | 패턴/알고리즘 동시 검색, 탭 UI로 결과 구분 |
