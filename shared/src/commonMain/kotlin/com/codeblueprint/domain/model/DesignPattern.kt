@@ -34,7 +34,8 @@ data class DesignPattern(
     val diagram: String,
     val relatedPatternIds: List<String>,
     val difficulty: Difficulty,
-    val frequency: Int
+    val frequency: Int,
+    val isBookmarked: Boolean = false
 ) {
     /**
      * 사용 빈도를 별점 형태로 반환

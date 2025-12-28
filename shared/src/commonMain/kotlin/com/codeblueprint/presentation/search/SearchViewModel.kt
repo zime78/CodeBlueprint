@@ -1,9 +1,10 @@
 package com.codeblueprint.presentation.search
 
+import com.codeblueprint.domain.model.Algorithm
 import com.codeblueprint.domain.model.DesignPattern
-import com.codeblueprint.domain.model.LearningProgress
-import com.codeblueprint.domain.usecase.GetLearningProgressUseCase
+import com.codeblueprint.domain.usecase.SearchAlgorithmsUseCase
 import com.codeblueprint.domain.usecase.SearchPatternsUseCase
+import com.codeblueprint.domain.usecase.ToggleAlgorithmBookmarkUseCase
 import com.codeblueprint.domain.usecase.ToggleBookmarkUseCase
 import com.codeblueprint.presentation.base.BaseViewModel
 import kotlinx.coroutines.Job
@@ -19,8 +20,9 @@ import kotlinx.coroutines.launch
  */
 class SearchViewModel(
     private val searchPatternsUseCase: SearchPatternsUseCase,
-    private val getLearningProgressUseCase: GetLearningProgressUseCase,
-    private val toggleBookmarkUseCase: ToggleBookmarkUseCase
+    private val searchAlgorithmsUseCase: SearchAlgorithmsUseCase,
+    private val toggleBookmarkUseCase: ToggleBookmarkUseCase,
+    private val toggleAlgorithmBookmarkUseCase: ToggleAlgorithmBookmarkUseCase
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow<SearchUiState>(SearchUiState.Initial)
@@ -49,6 +51,9 @@ class SearchViewModel(
             }
             is SearchEvent.OnBookmarkToggle -> {
                 toggleBookmark(event.patternId)
+            }
+            is SearchEvent.OnAlgorithmBookmarkToggle -> {
+                toggleAlgorithmBookmark(event.algorithmId)
             }
             else -> { /* Navigation 이벤트는 Screen에서 처리 */ }
         }
@@ -86,9 +91,9 @@ class SearchViewModel(
             try {
                 combine(
                     searchPatternsUseCase(query),
-                    getLearningProgressUseCase.getAll()
-                ) { patterns, progressList ->
-                    mapToUiState(query, patterns, progressList)
+                    searchAlgorithmsUseCase(query)
+                ) { patterns, algorithms ->
+                    mapToUiState(query, patterns, algorithms)
                 }.collect { state ->
                     _uiState.value = state
                 }
@@ -101,7 +106,7 @@ class SearchViewModel(
     }
 
     /**
-     * 북마크 토글
+     * 패턴 북마크 토글
      */
     private fun toggleBookmark(patternId: String) {
         viewModelScope.launch {
@@ -114,23 +119,34 @@ class SearchViewModel(
     }
 
     /**
+     * 알고리즘 북마크 토글
+     */
+    private fun toggleAlgorithmBookmark(algorithmId: String) {
+        viewModelScope.launch {
+            try {
+                toggleAlgorithmBookmarkUseCase(algorithmId)
+            } catch (e: Exception) {
+                // 에러 처리
+            }
+        }
+    }
+
+    /**
      * 검색 결과를 UI 상태로 변환
      */
     private fun mapToUiState(
         query: String,
         patterns: List<DesignPattern>,
-        progressList: List<LearningProgress>
+        algorithms: List<Algorithm>
     ): SearchUiState {
-        if (patterns.isEmpty()) {
+        if (patterns.isEmpty() && algorithms.isEmpty()) {
             return SearchUiState.Empty(query)
         }
 
-        val progressMap = progressList.associateBy { it.patternId }
         val queryLower = query.lowercase()
 
-        val results = patterns.map { pattern ->
-            val progress = progressMap[pattern.id]
-            val matchedField = findMatchedField(pattern, queryLower)
+        val patternResults = patterns.map { pattern ->
+            val matchedField = findPatternMatchedField(pattern, queryLower)
 
             SearchResultUiModel(
                 id = pattern.id,
@@ -139,28 +155,57 @@ class SearchViewModel(
                 category = pattern.category,
                 purpose = pattern.purpose,
                 matchedField = matchedField,
-                isBookmarked = progress?.isBookmarked ?: false,
-                isCompleted = progress?.isCompleted ?: false
+                isBookmarked = pattern.isBookmarked
+            )
+        }
+
+        val algorithmResults = algorithms.map { algorithm ->
+            val matchedField = findAlgorithmMatchedField(algorithm, queryLower)
+
+            AlgorithmSearchResultUiModel(
+                id = algorithm.id,
+                name = algorithm.name,
+                koreanName = algorithm.koreanName,
+                category = algorithm.category,
+                purpose = algorithm.purpose,
+                timeComplexity = algorithm.timeComplexity.average,
+                matchedField = matchedField,
+                isBookmarked = algorithm.isBookmarked
             )
         }
 
         return SearchUiState.Results(
             query = query,
-            patterns = results,
-            totalCount = results.size
+            patterns = patternResults,
+            algorithms = algorithmResults,
+            totalCount = patternResults.size + algorithmResults.size
         )
     }
 
     /**
-     * 일치한 필드 찾기
+     * 패턴에서 일치한 필드 찾기
      */
-    private fun findMatchedField(pattern: DesignPattern, queryLower: String): MatchedField {
+    private fun findPatternMatchedField(pattern: DesignPattern, queryLower: String): MatchedField {
         return when {
             pattern.name.lowercase().contains(queryLower) -> MatchedField.NAME
             pattern.koreanName.contains(queryLower) -> MatchedField.KOREAN_NAME
             pattern.purpose.lowercase().contains(queryLower) -> MatchedField.PURPOSE
             pattern.characteristics.any { it.lowercase().contains(queryLower) } -> MatchedField.CHARACTERISTICS
             pattern.useCases.any { it.lowercase().contains(queryLower) } -> MatchedField.USE_CASES
+            else -> MatchedField.PURPOSE
+        }
+    }
+
+    /**
+     * 알고리즘에서 일치한 필드 찾기
+     */
+    private fun findAlgorithmMatchedField(algorithm: Algorithm, queryLower: String): MatchedField {
+        return when {
+            algorithm.name.lowercase().contains(queryLower) -> MatchedField.NAME
+            algorithm.koreanName.contains(queryLower) -> MatchedField.KOREAN_NAME
+            algorithm.purpose.lowercase().contains(queryLower) -> MatchedField.PURPOSE
+            algorithm.characteristics.any { it.lowercase().contains(queryLower) } -> MatchedField.CHARACTERISTICS
+            algorithm.useCases.any { it.lowercase().contains(queryLower) } -> MatchedField.USE_CASES
             else -> MatchedField.PURPOSE
         }
     }

@@ -5,9 +5,9 @@
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Android%20%7C%20iOS-lightgrey.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> GoF 23개 디자인 패턴과 73개 알고리즘을 학습할 수 있는 크로스 플랫폼 학습 앱
+> GoF 23개 디자인 패턴과 73개 알고리즘을 빠르게 검색하고 참조할 수 있는 개발자 도구
 
-CodeBlueprint는 Kotlin Multiplatform과 Compose Multiplatform을 기반으로 macOS, Android, iOS에서 동일한 코드베이스로 실행되는 소프트웨어 설계 패턴 학습 애플리케이션입니다.
+CodeBlueprint는 Kotlin Multiplatform과 Compose Multiplatform을 기반으로 macOS, Android, iOS에서 동일한 코드베이스로 실행되는 소프트웨어 설계 패턴 참조 애플리케이션입니다.
 
 ## 스크린샷
 
@@ -19,7 +19,8 @@ CodeBlueprint는 Kotlin Multiplatform과 Compose Multiplatform을 기반으로 m
 
 ## 주요 기능
 
-### 디자인 패턴 학습
+### 디자인 패턴
+
 - **23개 GoF 디자인 패턴** 수록
   - 생성 패턴 (5개): Singleton, Factory Method, Abstract Factory, Builder, Prototype
   - 구조 패턴 (7개): Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy
@@ -27,21 +28,19 @@ CodeBlueprint는 Kotlin Multiplatform과 Compose Multiplatform을 기반으로 m
 - 패턴별 상세 설명, 장단점, 활용 사례 제공
 - **다국어 코드 예시**: Kotlin, Java, Swift, Python
 
-### 알고리즘 학습
+### 알고리즘
+
 - **73개 핵심 알고리즘** 수록 (9개 카테고리)
   - 정렬 (13개), 탐색 (8개), 그래프 (12개), 동적 프로그래밍 (8개)
   - 분할 정복 (5개), 탐욕 (5개), 백트래킹 (5개), 문자열 (7개), 수학 (10개)
 - 시간/공간 복잡도 분석
 - 구현 코드 및 활용 사례
 
-### 학습 관리
-- **북마크**: 중요한 패턴/알고리즘 저장
-- **학습 진도**: 완료 표시 및 진행률 추적
-- **검색**: 키워드 기반 통합 검색
+### 빠른 접근 및 검색
 
-### 추가 기능
-- **AI 어드바이저**: 상황에 맞는 패턴/알고리즘 추천
-- **코드 플레이그라운드**: 실시간 코드 실행 환경
+- **통합 검색**: 패턴과 알고리즘을 동시에 검색, 탭 UI로 결과 구분
+- **북마크**: 자주 참조하는 패턴/알고리즘 저장
+- **빠른 접근**: 북마크된 항목을 목록 상단에 칩으로 표시
 
 ---
 
@@ -121,7 +120,8 @@ sequenceDiagram
 ### 요구사항
 
 - **JDK 17** 이상
-- **Android Studio** Hedgehog 이상 (Android 빌드)
+- **Android SDK** API 35 이상 (Android 빌드)
+  - `local.properties`에 SDK 경로 설정: `sdk.dir=/path/to/Android/sdk`
 - **Xcode 15** 이상 (iOS 빌드)
 
 ### 빌드 및 실행
@@ -174,6 +174,23 @@ CodeBlueprint/
 
 CodeBlueprint는 [Claude Code](https://claude.ai/code)와 연동하여 디자인 패턴 및 알고리즘 코드를 생성할 수 있습니다.
 
+### MCP CLI
+
+터미널에서 패턴/알고리즘 정보를 빠르게 조회할 수 있는 Bash 스크립트입니다.
+
+```bash
+# 패턴 목록
+codeblueprint pattern list
+
+# 패턴 상세
+codeblueprint pattern get singleton
+
+# 알고리즘 검색
+codeblueprint algorithm search 정렬
+```
+
+설치: PATH에 `tools/mcp-cli` 디렉토리 추가
+
 ### MCP 서버
 
 프로젝트의 `tools/mcp-server/` 디렉토리에 MCP 서버 소스가 포함되어 있으며, 10개의 도구를 제공합니다:
@@ -182,7 +199,7 @@ CodeBlueprint는 [Claude Code](https://claude.ai/code)와 연동하여 디자인
 # MCP 서버 빌드 및 실행
 cd tools/mcp-server
 npm install
-npm run build
+npx tsc
 ```
 
 | 도구 | 설명 |

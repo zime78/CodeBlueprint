@@ -45,8 +45,7 @@ data class PatternDetailUiModel(
     val relatedPatterns: List<RelatedPatternUiModel>,
     val difficulty: Difficulty,
     val frequency: Int,
-    val isBookmarked: Boolean,
-    val isCompleted: Boolean
+    val isBookmarked: Boolean
 )
 
 /**
@@ -66,11 +65,6 @@ sealed class PatternDetailEvent {
      * 북마크 토글
      */
     object OnBookmarkToggle : PatternDetailEvent()
-
-    /**
-     * 학습 완료 토글
-     */
-    object OnCompleteToggle : PatternDetailEvent()
 
     /**
      * 코드 언어 변경

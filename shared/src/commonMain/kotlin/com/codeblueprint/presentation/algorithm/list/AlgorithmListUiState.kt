@@ -15,10 +15,7 @@ sealed class AlgorithmListUiState {
      * 성공 상태
      */
     data class Success(
-        val algorithmsByCategory: Map<AlgorithmCategory, List<AlgorithmUiModel>>,
-        val learningProgress: Float,
-        val completedCount: Int,
-        val totalCount: Int
+        val algorithmsByCategory: Map<AlgorithmCategory, List<AlgorithmUiModel>>
     ) : AlgorithmListUiState()
 
     /**
@@ -40,8 +37,7 @@ data class AlgorithmUiModel(
     val spaceComplexity: String,
     val difficulty: Int,
     val frequency: Int,
-    val isBookmarked: Boolean,
-    val isCompleted: Boolean
+    val isBookmarked: Boolean
 )
 
 /**

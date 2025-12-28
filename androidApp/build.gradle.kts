@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.codeblueprint"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.codeblueprint"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -50,6 +50,10 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+
+    // Decompose
+    implementation(libs.decompose)
+    implementation(libs.decompose.extensions.android)
 
     // Koin
     implementation(libs.koin.android)

@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
@@ -34,6 +33,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -41,7 +42,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -50,7 +53,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.codeblueprint.domain.model.AlgorithmCategory
 import com.codeblueprint.domain.model.PatternCategory
+import com.codeblueprint.presentation.search.AlgorithmSearchResultUiModel
 import com.codeblueprint.presentation.search.MatchedField
 import com.codeblueprint.presentation.search.SearchEvent
 import com.codeblueprint.presentation.search.SearchResultUiModel
@@ -109,7 +114,7 @@ fun SearchScreen(
                     .padding(horizontal = 16.dp)
                     .focusRequester(focusRequester),
                 placeholder = {
-                    Text(text = "패턴명, 목적, 활용 예시로 검색")
+                    Text(text = "패턴, 알고리즘 검색")
                 },
                 leadingIcon = {
                     Icon(
@@ -160,11 +165,16 @@ fun SearchScreen(
 
                     is SearchUiState.Results -> {
                         ResultsContent(
-                            results = state.patterns,
+                            patterns = state.patterns,
+                            algorithms = state.algorithms,
                             totalCount = state.totalCount,
                             onPatternClick = { component.onPatternClick(it) },
-                            onBookmarkToggle = { patternId ->
+                            onAlgorithmClick = { component.onAlgorithmClick(it) },
+                            onPatternBookmarkToggle = { patternId ->
                                 viewModel.onEvent(SearchEvent.OnBookmarkToggle(patternId))
+                            },
+                            onAlgorithmBookmarkToggle = { algorithmId ->
+                                viewModel.onEvent(SearchEvent.OnAlgorithmBookmarkToggle(algorithmId))
                             }
                         )
                     }
@@ -202,7 +212,7 @@ private fun InitialContent() {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "패턴명, 목적, 활용 예시로 검색해보세요",
+                text = "패턴이나 알고리즘을 검색해보세요",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -269,53 +279,90 @@ private fun ErrorContent(message: String) {
 }
 
 /**
- * 검색 결과 목록
+ * 검색 결과 목록 (탭 UI)
  */
 @Composable
 private fun ResultsContent(
-    results: List<SearchResultUiModel>,
+    patterns: List<SearchResultUiModel>,
+    algorithms: List<AlgorithmSearchResultUiModel>,
     totalCount: Int,
     onPatternClick: (String) -> Unit,
-    onBookmarkToggle: (String) -> Unit
+    onAlgorithmClick: (String) -> Unit,
+    onPatternBookmarkToggle: (String) -> Unit,
+    onAlgorithmBookmarkToggle: (String) -> Unit
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // 결과 수 표시
-        item {
-            Text(
-                text = "${totalCount}개의 결과",
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("패턴 (${patterns.size})", "알고리즘 (${algorithms.size})")
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // 탭
+        TabRow(selectedTabIndex = selectedTab) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = { Text(title) }
+                )
+            }
         }
 
-        // 결과 아이템들
-        items(
-            items = results,
-            key = { it.id }
-        ) { result ->
-            SearchResultItem(
-                result = result,
-                onClick = { onPatternClick(result.id) },
-                onBookmarkClick = { onBookmarkToggle(result.id) }
-            )
-        }
+        // 결과 목록
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // 결과 수 표시
+            item {
+                Text(
+                    text = "${totalCount}개의 결과",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-        // 하단 여백
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
+            when (selectedTab) {
+                0 -> {
+                    // 패턴 결과
+                    items(
+                        items = patterns,
+                        key = { "pattern_${it.id}" }
+                    ) { result ->
+                        PatternSearchResultItem(
+                            result = result,
+                            onClick = { onPatternClick(result.id) },
+                            onBookmarkClick = { onPatternBookmarkToggle(result.id) }
+                        )
+                    }
+                }
+                1 -> {
+                    // 알고리즘 결과
+                    items(
+                        items = algorithms,
+                        key = { "algorithm_${it.id}" }
+                    ) { result ->
+                        AlgorithmSearchResultItem(
+                            result = result,
+                            onClick = { onAlgorithmClick(result.id) },
+                            onBookmarkClick = { onAlgorithmBookmarkToggle(result.id) }
+                        )
+                    }
+                }
+            }
+
+            // 하단 여백
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }
 
 /**
- * 검색 결과 아이템
+ * 패턴 검색 결과 아이템
  */
 @Composable
-private fun SearchResultItem(
+private fun PatternSearchResultItem(
     result: SearchResultUiModel,
     onClick: () -> Unit,
     onBookmarkClick: () -> Unit
@@ -336,17 +383,6 @@ private fun SearchResultItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 완료 표시
-            if (result.isCompleted) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "완료",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-            }
-
             // 패턴 정보
             Column(
                 modifier = Modifier.weight(1f)
@@ -452,6 +488,128 @@ private fun MatchedFieldTag(matchedField: MatchedField) {
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onTertiaryContainer
+        )
+    }
+}
+
+/**
+ * 알고리즘 검색 결과 아이템
+ */
+@Composable
+private fun AlgorithmSearchResultItem(
+    result: AlgorithmSearchResultUiModel,
+    onClick: () -> Unit,
+    onBookmarkClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 알고리즘 정보
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 카테고리 태그
+                    AlgorithmCategoryTag(category = result.category)
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // 일치 필드 태그
+                    MatchedFieldTag(matchedField = result.matchedField)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = result.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = result.koreanName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = result.purpose,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    // 시간 복잡도 표시
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = result.timeComplexity,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
+            }
+
+            // 북마크 버튼
+            IconButton(onClick = onBookmarkClick) {
+                Icon(
+                    imageVector = if (result.isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                    contentDescription = if (result.isBookmarked) "북마크 해제" else "북마크",
+                    tint = if (result.isBookmarked) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 알고리즘 카테고리 태그
+ */
+@Composable
+private fun AlgorithmCategoryTag(category: AlgorithmCategory) {
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = MaterialTheme.shapes.small
+    ) {
+        Text(
+            text = category.koreanName,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
         )
     }
 }

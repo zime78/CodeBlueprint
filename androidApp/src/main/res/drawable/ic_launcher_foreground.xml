@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 배경 원 -->
+    <path
+        android:fillColor="#4285F4"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"/>
+    <!-- CB 텍스트 표현 (Code Blueprint 약자) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,42 L38,66 L42,66 L42,56 L48,66 L52,66 L45,54 L52,42 L48,42 L42,52 L42,42 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M56,42 L56,66 L60,66 L60,56 L66,56 L66,52 L60,52 L60,46 L70,46 L70,42 Z"/>
+</vector>

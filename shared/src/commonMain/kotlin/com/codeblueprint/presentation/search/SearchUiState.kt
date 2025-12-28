@@ -1,5 +1,6 @@
 package com.codeblueprint.presentation.search
 
+import com.codeblueprint.domain.model.AlgorithmCategory
 import com.codeblueprint.domain.model.PatternCategory
 
 /**
@@ -22,6 +23,7 @@ sealed class SearchUiState {
     data class Results(
         val query: String,
         val patterns: List<SearchResultUiModel>,
+        val algorithms: List<AlgorithmSearchResultUiModel>,
         val totalCount: Int
     ) : SearchUiState()
 
@@ -37,7 +39,7 @@ sealed class SearchUiState {
 }
 
 /**
- * 검색 결과 UI 모델
+ * 패턴 검색 결과 UI 모델
  */
 data class SearchResultUiModel(
     val id: String,
@@ -46,8 +48,21 @@ data class SearchResultUiModel(
     val category: PatternCategory,
     val purpose: String,
     val matchedField: MatchedField,
-    val isBookmarked: Boolean,
-    val isCompleted: Boolean
+    val isBookmarked: Boolean
+)
+
+/**
+ * 알고리즘 검색 결과 UI 모델
+ */
+data class AlgorithmSearchResultUiModel(
+    val id: String,
+    val name: String,
+    val koreanName: String,
+    val category: AlgorithmCategory,
+    val purpose: String,
+    val timeComplexity: String,
+    val matchedField: MatchedField,
+    val isBookmarked: Boolean
 )
 
 /**
@@ -89,4 +104,14 @@ sealed class SearchEvent {
      * 북마크 토글
      */
     data class OnBookmarkToggle(val patternId: String) : SearchEvent()
+
+    /**
+     * 알고리즘 클릭
+     */
+    data class OnAlgorithmClick(val algorithmId: String) : SearchEvent()
+
+    /**
+     * 알고리즘 북마크 토글
+     */
+    data class OnAlgorithmBookmarkToggle(val algorithmId: String) : SearchEvent()
 }

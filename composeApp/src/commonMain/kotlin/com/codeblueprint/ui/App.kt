@@ -8,7 +8,6 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.plus
 import com.arkivanov.decompose.extensions.compose.stack.animation.scale
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.codeblueprint.ui.ai.AIAdvisorScreen
 import com.codeblueprint.ui.algorithm.detail.AlgorithmDetailScreen
 import com.codeblueprint.ui.algorithm.list.AlgorithmListScreen
 import com.codeblueprint.ui.architecture.ArchitectureDetailScreen
@@ -70,11 +69,6 @@ fun App(
                 }
                 is RootComponent.Child.ArchitectureDetail -> {
                     ArchitectureDetailScreen(
-                        component = instance.component
-                    )
-                }
-                is RootComponent.Child.AIAdvisor -> {
-                    AIAdvisorScreen(
                         component = instance.component
                     )
                 }

@@ -8,27 +8,22 @@ import com.codeblueprint.data.mapper.AlgorithmMapper
 import com.codeblueprint.data.mapper.LearningProgressMapper
 import com.codeblueprint.data.mapper.PatternMapper
 import com.codeblueprint.data.mapper.SettingsMapper
-import com.codeblueprint.data.repository.AIRepositoryImpl
 import com.codeblueprint.data.repository.AlgorithmRepositoryImpl
 import com.codeblueprint.data.repository.ArchitectureRepositoryImpl
 import com.codeblueprint.data.repository.CodeExecutionRepositoryImpl
 import com.codeblueprint.data.repository.PatternRepositoryImpl
 import com.codeblueprint.data.repository.SettingsRepositoryImpl
 import com.codeblueprint.db.CodeBlueprintDatabase
-import com.codeblueprint.domain.repository.AIRepository
 import com.codeblueprint.domain.repository.AlgorithmRepository
 import com.codeblueprint.domain.repository.ArchitectureRepository
 import com.codeblueprint.domain.repository.CodeExecutionRepository
 import com.codeblueprint.domain.repository.PatternRepository
 import com.codeblueprint.domain.repository.SettingsRepository
 import com.codeblueprint.domain.usecase.ExecuteCodeUseCase
-import com.codeblueprint.domain.usecase.GetAIRecommendationUseCase
 import com.codeblueprint.domain.usecase.GetAlgorithmDetailUseCase
-import com.codeblueprint.domain.usecase.GetAlgorithmLearningProgressUseCase
 import com.codeblueprint.domain.usecase.GetAlgorithmsUseCase
 import com.codeblueprint.domain.usecase.GetArchitectureDetailUseCase
 import com.codeblueprint.domain.usecase.GetArchitecturesUseCase
-import com.codeblueprint.domain.usecase.GetLearningProgressUseCase
 import com.codeblueprint.domain.usecase.GetPatternDetailUseCase
 import com.codeblueprint.domain.usecase.GetPatternsUseCase
 import com.codeblueprint.domain.usecase.GetSettingsUseCase
@@ -36,10 +31,7 @@ import com.codeblueprint.domain.usecase.SaveSettingsUseCase
 import com.codeblueprint.domain.usecase.SearchAlgorithmsUseCase
 import com.codeblueprint.domain.usecase.SearchPatternsUseCase
 import com.codeblueprint.domain.usecase.ToggleAlgorithmBookmarkUseCase
-import com.codeblueprint.domain.usecase.ToggleAlgorithmCompleteUseCase
 import com.codeblueprint.domain.usecase.ToggleBookmarkUseCase
-import com.codeblueprint.domain.usecase.ToggleCompleteUseCase
-import com.codeblueprint.presentation.ai.AIAdvisorViewModel
 import com.codeblueprint.presentation.algorithm.detail.AlgorithmDetailViewModel
 import com.codeblueprint.presentation.algorithm.list.AlgorithmListViewModel
 import com.codeblueprint.presentation.architecture.detail.ArchitectureDetailViewModel
@@ -63,17 +55,12 @@ val domainModule = module {
     factory { GetPatternDetailUseCase(get()) }
     factory { SearchPatternsUseCase(get()) }
     factory { ToggleBookmarkUseCase(get()) }
-    factory { ToggleCompleteUseCase(get()) }
-    factory { GetLearningProgressUseCase(get()) }
     factory { GetSettingsUseCase(get()) }
     factory { SaveSettingsUseCase(get()) }
 
     // Architecture UseCases
     factory { GetArchitecturesUseCase(get()) }
     factory { GetArchitectureDetailUseCase(get()) }
-
-    // AI UseCases
-    factory { GetAIRecommendationUseCase(get()) }
 
     // Code Playground UseCases
     factory { ExecuteCodeUseCase(get()) }
@@ -82,9 +69,7 @@ val domainModule = module {
     factory { GetAlgorithmsUseCase(get()) }
     factory { GetAlgorithmDetailUseCase(get()) }
     factory { SearchAlgorithmsUseCase(get()) }
-    factory { GetAlgorithmLearningProgressUseCase(get()) }
     factory { ToggleAlgorithmBookmarkUseCase(get()) }
-    factory { ToggleAlgorithmCompleteUseCase(get()) }
 }
 
 /**
@@ -128,9 +113,6 @@ val dataModule = module {
     // Architecture Repository (인메모리)
     single<ArchitectureRepository> { ArchitectureRepositoryImpl() }
 
-    // AI Repository (Mock)
-    single<AIRepository> { AIRepositoryImpl() }
-
     // Code Execution Repository (Mock)
     single<CodeExecutionRepository> { CodeExecutionRepositoryImpl() }
 
@@ -151,11 +133,11 @@ val dataModule = module {
  */
 val presentationModule = module {
     // ViewModels
-    factory { PatternListViewModel(get(), get(), get()) }
+    factory { PatternListViewModel(get(), get()) }
     factory { (patternId: String) ->
-        PatternDetailViewModel(patternId, get(), get(), get(), get(), get())
+        PatternDetailViewModel(patternId, get(), get(), get())
     }
-    factory { SearchViewModel(get(), get(), get()) }
+    factory { SearchViewModel(get(), get(), get(), get()) }
     factory { BookmarksViewModel(get(), get()) }
     factory { SettingsViewModel(get(), get()) }
 
@@ -165,22 +147,17 @@ val presentationModule = module {
         ArchitectureDetailViewModel(architectureId, get())
     }
 
-    // AI ViewModel
-    factory { AIAdvisorViewModel(get()) }
-
     // Code Playground ViewModel
     factory { CodePlaygroundViewModel(get()) }
 
     // Algorithm ViewModels
-    factory { AlgorithmListViewModel(get(), get(), get()) }
+    factory { AlgorithmListViewModel(get(), get()) }
     factory { (algorithmId: String) ->
         AlgorithmDetailViewModel(
             algorithmId = algorithmId,
             getAlgorithmDetailUseCase = get(),
             getAlgorithmsUseCase = get(),
-            getLearningProgressUseCase = get<GetAlgorithmLearningProgressUseCase>(),
-            toggleBookmarkUseCase = get<ToggleAlgorithmBookmarkUseCase>(),
-            toggleCompleteUseCase = get<ToggleAlgorithmCompleteUseCase>()
+            toggleBookmarkUseCase = get<ToggleAlgorithmBookmarkUseCase>()
         )
     }
 }

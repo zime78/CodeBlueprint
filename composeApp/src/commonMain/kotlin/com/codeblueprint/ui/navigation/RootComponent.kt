@@ -23,7 +23,6 @@ interface RootComponent {
         data class Settings(val component: SettingsComponent) : Child()
         data class ArchitectureList(val component: ArchitectureListComponent) : Child()
         data class ArchitectureDetail(val component: ArchitectureDetailComponent) : Child()
-        data class AIAdvisor(val component: AIAdvisorComponent) : Child()
         data class CodePlayground(val component: CodePlaygroundComponent) : Child()
         data class AlgorithmList(val component: AlgorithmListComponent) : Child()
         data class AlgorithmDetail(val component: AlgorithmDetailComponent) : Child()
@@ -39,7 +38,6 @@ interface PatternListComponent {
     fun onBookmarksClick()
     fun onSettingsClick()
     fun onArchitectureClick()
-    fun onAIAdvisorClick()
     fun onAlgorithmClick()
 }
 
@@ -59,6 +57,7 @@ interface PatternDetailComponent {
 interface SearchComponent {
     fun onBackClick()
     fun onPatternClick(patternId: String)
+    fun onAlgorithmClick(algorithmId: String)
 }
 
 /**
@@ -90,14 +89,6 @@ interface ArchitectureListComponent {
 interface ArchitectureDetailComponent {
     val architectureId: String
     fun onBackClick()
-}
-
-/**
- * AI 어드바이저 화면 컴포넌트
- */
-interface AIAdvisorComponent {
-    fun onBackClick()
-    fun onPatternClick(patternId: String)
 }
 
 /**
@@ -166,9 +157,6 @@ class DefaultRootComponent(
             is Config.ArchitectureDetail -> RootComponent.Child.ArchitectureDetail(
                 DefaultArchitectureDetailComponent(componentContext, config.architectureId, navigation)
             )
-            is Config.AIAdvisor -> RootComponent.Child.AIAdvisor(
-                DefaultAIAdvisorComponent(componentContext, navigation)
-            )
             is Config.CodePlayground -> RootComponent.Child.CodePlayground(
                 DefaultCodePlaygroundComponent(componentContext, navigation)
             )
@@ -203,9 +191,6 @@ class DefaultRootComponent(
 
         @Serializable
         data class ArchitectureDetail(val architectureId: String) : Config()
-
-        @Serializable
-        data object AIAdvisor : Config()
 
         @Serializable
         data object CodePlayground : Config()
@@ -244,10 +229,6 @@ class DefaultPatternListComponent(
 
     override fun onArchitectureClick() {
         navigation.push(DefaultRootComponent.Config.ArchitectureList)
-    }
-
-    override fun onAIAdvisorClick() {
-        navigation.push(DefaultRootComponent.Config.AIAdvisor)
     }
 
     override fun onAlgorithmClick() {
@@ -291,6 +272,10 @@ class DefaultSearchComponent(
 
     override fun onPatternClick(patternId: String) {
         navigation.push(DefaultRootComponent.Config.PatternDetail(patternId))
+    }
+
+    override fun onAlgorithmClick(algorithmId: String) {
+        navigation.push(DefaultRootComponent.Config.AlgorithmDetail(algorithmId))
     }
 }
 
@@ -352,23 +337,6 @@ class DefaultArchitectureDetailComponent(
 
     override fun onBackClick() {
         navigation.pop()
-    }
-}
-
-/**
- * AI 어드바이저 컴포넌트 기본 구현
- */
-class DefaultAIAdvisorComponent(
-    componentContext: ComponentContext,
-    private val navigation: StackNavigation<DefaultRootComponent.Config>
-) : AIAdvisorComponent, ComponentContext by componentContext {
-
-    override fun onBackClick() {
-        navigation.pop()
-    }
-
-    override fun onPatternClick(patternId: String) {
-        navigation.push(DefaultRootComponent.Config.PatternDetail(patternId))
     }
 }
 

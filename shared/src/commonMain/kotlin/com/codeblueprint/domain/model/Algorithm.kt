@@ -20,7 +20,8 @@ data class Algorithm(
     val codeExamples: List<CodeExample>,      // 언어별 코드 예시
     val relatedAlgorithmIds: List<String>,    // 관련 알고리즘 ID들
     val difficulty: Difficulty,               // 난이도 (LOW/MEDIUM/HIGH)
-    val frequency: Int                        // 사용 빈도 (1-5)
+    val frequency: Int,                       // 사용 빈도 (1-5)
+    val isBookmarked: Boolean = false         // 북마크 여부
 ) {
     /**
      * 난이도를 숫자로 변환 (UI 표시용)

@@ -15,10 +15,7 @@ sealed class PatternListUiState {
      * 성공 상태
      */
     data class Success(
-        val patternsByCategory: Map<PatternCategory, List<PatternUiModel>>,
-        val learningProgress: Float,
-        val completedCount: Int,
-        val totalCount: Int
+        val patternsByCategory: Map<PatternCategory, List<PatternUiModel>>
     ) : PatternListUiState()
 
     /**
@@ -38,8 +35,7 @@ data class PatternUiModel(
     val purpose: String,
     val difficulty: Int,
     val frequency: Int,
-    val isBookmarked: Boolean,
-    val isCompleted: Boolean
+    val isBookmarked: Boolean
 )
 
 /**
