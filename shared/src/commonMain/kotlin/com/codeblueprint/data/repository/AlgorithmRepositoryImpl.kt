@@ -5,6 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.codeblueprint.data.mapper.AlgorithmLearningProgressMapper
 import com.codeblueprint.data.mapper.AlgorithmMapper
+import com.codeblueprint.data.mapper.CodeExampleMapper
 import com.codeblueprint.db.CodeBlueprintDatabase
 import com.codeblueprint.domain.model.Algorithm
 import com.codeblueprint.domain.model.AlgorithmCategory
@@ -24,7 +25,8 @@ import kotlinx.datetime.Clock
 class AlgorithmRepositoryImpl(
     private val database: CodeBlueprintDatabase,
     private val algorithmMapper: AlgorithmMapper,
-    private val progressMapper: AlgorithmLearningProgressMapper
+    private val progressMapper: AlgorithmLearningProgressMapper,
+    private val codeExampleMapper: CodeExampleMapper = CodeExampleMapper()
 ) : AlgorithmRepository {
 
     private val queries = database.codeBlueprintQueries
@@ -48,9 +50,19 @@ class AlgorithmRepositoryImpl(
     }
 
     override suspend fun getAlgorithmById(id: String): Algorithm? {
-        return queries.getAlgorithmById(id)
-            .executeAsOneOrNull()
-            ?.let { algorithmMapper.toDomain(it) }
+        val algorithmEntity = queries.getAlgorithmById(id).executeAsOneOrNull() ?: return null
+        val algorithm = algorithmMapper.toDomain(algorithmEntity)
+
+        // 새 테이블에서 코드 예제 조회 (우선), 없으면 기존 JSON 데이터 사용
+        val codeExamples = queries.getCodeExamplesByAlgorithmId(id)
+            .executeAsList()
+            .map { codeExampleMapper.toDomain(it) }
+
+        return if (codeExamples.isNotEmpty()) {
+            algorithm.copy(codeExamples = codeExamples)
+        } else {
+            algorithm // 기존 JSON 파싱 데이터 사용 (fallback)
+        }
     }
 
     override fun searchAlgorithms(query: String): Flow<List<Algorithm>> {

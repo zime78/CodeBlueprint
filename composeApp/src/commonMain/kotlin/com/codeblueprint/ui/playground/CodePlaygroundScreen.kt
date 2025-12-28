@@ -62,6 +62,7 @@ import com.codeblueprint.presentation.playground.CodePlaygroundUiState
 import com.codeblueprint.presentation.playground.CodePlaygroundViewModel
 import com.codeblueprint.ui.navigation.CodePlaygroundComponent
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 
 /**
  * 코드 플레이그라운드 화면
@@ -70,7 +71,9 @@ import org.koin.compose.koinInject
 @Composable
 fun CodePlaygroundScreen(
     component: CodePlaygroundComponent,
-    viewModel: CodePlaygroundViewModel = koinInject()
+    viewModel: CodePlaygroundViewModel = koinInject {
+        parametersOf(component.code, component.languageName, component.expectedOutput)
+    }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val code by viewModel.code.collectAsState()

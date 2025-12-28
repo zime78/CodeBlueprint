@@ -1,6 +1,7 @@
 package com.codeblueprint.di
 
 import com.codeblueprint.data.local.AlgorithmDataProvider
+import com.codeblueprint.data.local.DatabaseDriverFactory
 import com.codeblueprint.data.local.PatternDataInitializer
 import kotlinx.coroutines.runBlocking
 import org.koin.core.context.startKoin
@@ -16,13 +17,33 @@ fun initKoin() {
         modules(allModules())
     }
 
-    // 패턴 및 알고리즘 데이터 초기화
-    initializePatternData()
-    initializeAlgorithmData()
+    // Seed DB에서 초기화 시도
+    val seedInitialized = initializeFromSeed()
+
+    // Seed DB가 없거나 초기화 실패 시 런타임 초기화로 fallback
+    if (!seedInitialized) {
+        initializePatternData()
+        initializeAlgorithmData()
+    }
 }
 
 /**
- * 패턴 데이터 초기화
+ * Seed DB에서 초기화
+ *
+ * Pre-built DB 파일이 있으면 Documents 폴더로 복사합니다.
+ * @return true: Seed DB로 초기화됨, false: fallback 필요
+ */
+private fun initializeFromSeed(): Boolean {
+    val koin = KoinPlatformTools.defaultContext().get()
+    val dbFactory: DatabaseDriverFactory = koin.get()
+
+    return runBlocking {
+        dbFactory.initializeFromSeedIfNeeded()
+    }
+}
+
+/**
+ * 패턴 데이터 초기화 (Seed DB 없을 때 fallback)
  *
  * DB에 패턴 데이터가 없으면 23개 GoF 패턴을 삽입합니다.
  */
@@ -36,7 +57,7 @@ private fun initializePatternData() {
 }
 
 /**
- * 알고리즘 데이터 초기화
+ * 알고리즘 데이터 초기화 (Seed DB 없을 때 fallback)
  *
  * DB에 알고리즘 데이터가 없으면 73개 알고리즘을 삽입합니다.
  */

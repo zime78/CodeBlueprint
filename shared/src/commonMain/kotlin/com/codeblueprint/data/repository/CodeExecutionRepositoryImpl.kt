@@ -25,15 +25,27 @@ class CodeExecutionRepositoryImpl : CodeExecutionRepository {
     private val swiftInterpolator = SwiftInterpolator()
 
     /**
-     * 코드 실행 (Mock 구현)
-     * 실제 실행 대신 시뮬레이션된 결과 반환
+     * 코드 실행
+     *
+     * expectedOutput이 제공되면 해당 값을 반환,
+     * 없으면 시뮬레이션된 결과 반환
      */
-    override suspend fun executeCode(code: String, language: ProgrammingLanguage): CodeExecutionResult {
+    override suspend fun executeCode(
+        code: String,
+        language: ProgrammingLanguage,
+        expectedOutput: String?
+    ): CodeExecutionResult {
         // 실행 시뮬레이션을 위한 딜레이
         delay(500)
 
         return try {
-            val output = simulateExecution(code, language)
+            // expectedOutput이 있으면 해당 값 사용, 없으면 시뮬레이션
+            val output = if (!expectedOutput.isNullOrBlank()) {
+                expectedOutput
+            } else {
+                simulateExecution(code, language)
+            }
+
             CodeExecutionResult(
                 success = true,
                 output = output,
@@ -77,10 +89,25 @@ class CodeExecutionRepositoryImpl : CodeExecutionRepository {
     /**
      * Kotlin 코드 실행 시뮬레이션
      * 문자열 템플릿 ($var, ${expr}) 지원
+     * 함수 파라미터 바인딩 지원
      */
     private fun simulateKotlinExecution(code: String, output: StringBuilder) {
-        // 변수 추출
-        val variables = VariableExtractor.extractKotlinVariables(code)
+        // 1. 전역 변수 추출
+        val variables = VariableExtractor.extractKotlinVariables(code).toMutableMap()
+
+        // 2. 함수 파라미터 및 호출 인자 추출
+        val functionParams = VariableExtractor.extractKotlinFunctionParams(code)
+        val functionCalls = VariableExtractor.extractKotlinFunctionCalls(code)
+
+        // 3. 호출된 함수의 파라미터에 인자 값 바인딩
+        functionCalls.forEach { (funcName, args) ->
+            val params = functionParams[funcName] ?: return@forEach
+            params.forEachIndexed { index, paramName ->
+                if (index < args.size) {
+                    variables[paramName] = args[index]
+                }
+            }
+        }
 
         // println("...") 문 추출 및 문자열 보간 처리
         val printlnStringPattern = """println\s*\(\s*"([^"]*)"\s*\)""".toRegex()

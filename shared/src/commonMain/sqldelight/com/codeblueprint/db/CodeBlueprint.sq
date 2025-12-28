@@ -218,3 +218,134 @@ SELECT COUNT(*) FROM AlgorithmLearningProgressEntity WHERE is_completed = 1;
 -- 알고리즘 학습 진도 삭제
 deleteAlgorithmProgress:
 DELETE FROM AlgorithmLearningProgressEntity WHERE algorithm_id = ?;
+
+-- ===========================================
+-- 코드 예제 테이블 및 쿼리
+-- ===========================================
+
+-- 코드 예제 테이블 (패턴/알고리즘 공용)
+CREATE TABLE CodeExampleEntity (
+    id TEXT PRIMARY KEY NOT NULL,
+    pattern_id TEXT,
+    algorithm_id TEXT,
+    language TEXT NOT NULL,
+    code TEXT NOT NULL,
+    explanation TEXT NOT NULL,
+    sample_input TEXT,
+    expected_output TEXT,
+    display_order INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (pattern_id) REFERENCES PatternEntity(id) ON DELETE CASCADE,
+    FOREIGN KEY (algorithm_id) REFERENCES AlgorithmEntity(id) ON DELETE CASCADE
+);
+
+-- 인덱스
+CREATE INDEX idx_code_example_pattern_id ON CodeExampleEntity(pattern_id);
+CREATE INDEX idx_code_example_algorithm_id ON CodeExampleEntity(algorithm_id);
+CREATE INDEX idx_code_example_language ON CodeExampleEntity(language);
+
+-- [CREATE] 코드 예제 삽입
+insertCodeExample:
+INSERT OR REPLACE INTO CodeExampleEntity(
+    id, pattern_id, algorithm_id, language, code, explanation,
+    sample_input, expected_output, display_order, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- [READ] ID로 코드 예제 조회
+getCodeExampleById:
+SELECT * FROM CodeExampleEntity WHERE id = ?;
+
+-- [READ] 패턴별 모든 코드 예제 조회
+getCodeExamplesByPatternId:
+SELECT * FROM CodeExampleEntity
+WHERE pattern_id = ?
+ORDER BY display_order, language;
+
+-- [READ] 알고리즘별 모든 코드 예제 조회
+getCodeExamplesByAlgorithmId:
+SELECT * FROM CodeExampleEntity
+WHERE algorithm_id = ?
+ORDER BY display_order, language;
+
+-- [READ] 패턴별 특정 언어의 코드 예제 조회
+getCodeExampleByPatternAndLanguage:
+SELECT * FROM CodeExampleEntity
+WHERE pattern_id = ? AND language = ?
+LIMIT 1;
+
+-- [READ] 알고리즘별 특정 언어의 코드 예제 조회
+getCodeExampleByAlgorithmAndLanguage:
+SELECT * FROM CodeExampleEntity
+WHERE algorithm_id = ? AND language = ?
+LIMIT 1;
+
+-- [READ] 패턴별 지원 언어 목록 조회
+getLanguagesByPatternId:
+SELECT DISTINCT language FROM CodeExampleEntity
+WHERE pattern_id = ?
+ORDER BY language;
+
+-- [READ] 알고리즘별 지원 언어 목록 조회
+getLanguagesByAlgorithmId:
+SELECT DISTINCT language FROM CodeExampleEntity
+WHERE algorithm_id = ?
+ORDER BY language;
+
+-- [UPDATE] 코드 예제 업데이트
+updateCodeExample:
+UPDATE CodeExampleEntity SET
+    language = ?,
+    code = ?,
+    explanation = ?,
+    sample_input = ?,
+    expected_output = ?,
+    display_order = ?,
+    updated_at = ?
+WHERE id = ?;
+
+-- [DELETE] ID로 코드 예제 삭제
+deleteCodeExampleById:
+DELETE FROM CodeExampleEntity WHERE id = ?;
+
+-- [DELETE] 패턴별 모든 코드 예제 삭제
+deleteCodeExamplesByPatternId:
+DELETE FROM CodeExampleEntity WHERE pattern_id = ?;
+
+-- [DELETE] 알고리즘별 모든 코드 예제 삭제
+deleteCodeExamplesByAlgorithmId:
+DELETE FROM CodeExampleEntity WHERE algorithm_id = ?;
+
+-- [READ] 코드 예제 개수 조회 (패턴용)
+getCodeExampleCountByPatternId:
+SELECT COUNT(*) FROM CodeExampleEntity WHERE pattern_id = ?;
+
+-- [READ] 코드 예제 개수 조회 (알고리즘용)
+getCodeExampleCountByAlgorithmId:
+SELECT COUNT(*) FROM CodeExampleEntity WHERE algorithm_id = ?;
+
+-- [READ] 모든 코드 예제 조회
+getAllCodeExamples:
+SELECT * FROM CodeExampleEntity ORDER BY pattern_id, algorithm_id, display_order;
+
+-- ===========================================
+-- 앱 메타데이터 테이블 및 쿼리
+-- ===========================================
+
+-- 앱 메타데이터 테이블 (DB 버전 관리용)
+CREATE TABLE AppMetadata (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL
+);
+
+-- 메타데이터 조회
+getMetadata:
+SELECT value FROM AppMetadata WHERE key = ?;
+
+-- 메타데이터 삽입/업데이트
+upsertMetadata:
+INSERT OR REPLACE INTO AppMetadata(key, value) VALUES (?, ?);
+
+-- 모든 메타데이터 조회
+getAllMetadata:
+SELECT * FROM AppMetadata;

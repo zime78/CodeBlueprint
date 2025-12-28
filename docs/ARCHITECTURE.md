@@ -90,10 +90,15 @@ graph TB
 | `PatternCategory` | 패턴 카테고리 (생성/구조/행위) |
 | `Algorithm` | 알고리즘 정보 |
 | `AlgorithmCategory` | 알고리즘 카테고리 (9종) |
+| `ArchitecturePattern` | 아키텍처 패턴 정보 (계층, 다이어그램, 비교 메트릭) |
 | `TimeComplexity` | 시간 복잡도 (best/average/worst) |
 | `LearningProgress` | 학습 진도 |
 | `Settings` | 사용자 설정 |
+| `ThemeMode` | 테마 모드 (Light/Dark/System) |
+| `ProgrammingLanguage` | 지원 언어 (Kotlin, Java, Swift, Python, JavaScript) |
 | `CodeExample` | 언어별 코드 예시 |
+| `SampleInput` | 샘플 입력값 (이름, 값, 타입) |
+| `CodeExecutionResult` | 코드 실행 결과 (출력, 에러, 실행시간) |
 | `Difficulty` | 난이도 (LOW/MEDIUM/HIGH) |
 
 #### 저장소 인터페이스 (`domain/repository/`)
@@ -125,6 +130,15 @@ graph TB
 - `ToggleAlgorithmBookmarkUseCase` - 북마크 토글
 - `ToggleAlgorithmCompleteUseCase` - 완료 표시 토글
 
+**아키텍처 관련:**
+
+- `GetArchitecturesUseCase` - 아키텍처 목록 조회
+- `GetArchitectureDetailUseCase` - 아키텍처 상세 조회
+
+**코드 실행 관련:**
+
+- `ExecuteCodeUseCase` - 코드 실행
+
 ### 2. Data Layer (`shared/src/commonMain/kotlin/.../data/`)
 
 외부 시스템과의 통신 담당.
@@ -154,7 +168,12 @@ Entity ↔ Domain Model 변환:
 - `DatabaseDriverFactory` - 플랫폼별 SQLite 드라이버
 - `PatternDataInitializer` - 23개 GoF 패턴 초기 데이터
 - `AlgorithmDataProvider` - 73개 알고리즘 데이터
-- `ArchitectureDataProvider` - 아키텍처 패턴 데이터
+- `ArchitectureDataProvider` - 5개 아키텍처 패턴 데이터
+
+#### 코드 인터프리터 (`data/interpreter/`)
+
+- `VariableExtractor` - 코드에서 변수 추출
+- 코드 실행 시뮬레이션 로직
 
 ### 3. Presentation Layer (`shared/src/commonMain/kotlin/.../presentation/`)
 
@@ -225,10 +244,12 @@ sealed class Config : Parcelable {
     data class PatternDetail(val patternId: String) : Config()
     data object AlgorithmList : Config()
     data class AlgorithmDetail(val algorithmId: String) : Config()
+    data object ArchitectureList : Config()
+    data class ArchitectureDetail(val architectureId: String) : Config()
+    data class CodePlayground(...) : Config()
     data object Search : Config()
     data object Bookmarks : Config()
     data object Settings : Config()
-    // ...
 }
 ```
 
