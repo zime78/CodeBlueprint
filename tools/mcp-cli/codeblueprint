@@ -1,0 +1,428 @@
+#!/bin/bash
+#
+# CodeBlueprint CLI - 디자인 패턴 및 알고리즘 참조 도구
+#
+# 사용법: codeblueprint <command> [options]
+#
+# 명령어:
+#   pattern list [category]        패턴 목록 조회
+#   pattern get <id>               패턴 상세 조회
+#   pattern search <keyword>       패턴 검색
+#   pattern code <id> <lang>       패턴 코드 예시
+#
+#   algorithm list [category]      알고리즘 목록 조회
+#   algorithm get <id>             알고리즘 상세 조회
+#   algorithm search <keyword>     알고리즘 검색
+#   algorithm code <id> <lang>     알고리즘 코드 예시
+#
+#   help                           도움말 표시
+#
+
+set -e
+
+# 스크립트 디렉토리 기준으로 데이터 경로 설정
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DATA_DIR="${SCRIPT_DIR}/../mcp-server/data"
+PATTERNS_FILE="${DATA_DIR}/patterns.json"
+ALGORITHMS_FILE="${DATA_DIR}/algorithms.json"
+
+# 색상 정의
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+# jq 설치 확인
+check_jq() {
+    if ! command -v jq &> /dev/null; then
+        echo -e "${RED}오류: jq가 설치되어 있지 않습니다.${NC}"
+        echo "설치 방법: brew install jq (macOS) 또는 apt install jq (Linux)"
+        exit 1
+    fi
+}
+
+# 데이터 파일 확인
+check_data_files() {
+    if [[ ! -f "$PATTERNS_FILE" ]]; then
+        echo -e "${RED}오류: patterns.json 파일을 찾을 수 없습니다.${NC}"
+        echo "경로: $PATTERNS_FILE"
+        exit 1
+    fi
+    if [[ ! -f "$ALGORITHMS_FILE" ]]; then
+        echo -e "${RED}오류: algorithms.json 파일을 찾을 수 없습니다.${NC}"
+        echo "경로: $ALGORITHMS_FILE"
+        exit 1
+    fi
+}
+
+# 도움말 출력
+show_help() {
+    echo -e "${BOLD}CodeBlueprint CLI${NC} - 디자인 패턴 및 알고리즘 참조 도구"
+    echo ""
+    echo -e "${BOLD}사용법:${NC}"
+    echo "  codeblueprint <command> [options]"
+    echo ""
+    echo -e "${BOLD}패턴 명령어:${NC}"
+    echo "  pattern list [category]        패턴 목록 (category: creational, structural, behavioral)"
+    echo "  pattern get <id>               패턴 상세 조회"
+    echo "  pattern search <keyword>       패턴 검색"
+    echo "  pattern code <id> <lang>       코드 예시 (lang: kotlin, java, python, swift, javascript)"
+    echo ""
+    echo -e "${BOLD}알고리즘 명령어:${NC}"
+    echo "  algorithm list [category]      알고리즘 목록"
+    echo "  algorithm get <id>             알고리즘 상세 조회"
+    echo "  algorithm search <keyword>     알고리즘 검색"
+    echo "  algorithm code <id> <lang>     코드 예시"
+    echo ""
+    echo -e "${BOLD}기타:${NC}"
+    echo "  help                           이 도움말 표시"
+    echo ""
+    echo -e "${BOLD}예시:${NC}"
+    echo "  codeblueprint pattern list creational"
+    echo "  codeblueprint pattern get singleton"
+    echo "  codeblueprint pattern code factory kotlin"
+    echo "  codeblueprint algorithm list sorting"
+    echo "  codeblueprint algorithm search 정렬"
+}
+
+# 패턴 목록 출력
+pattern_list() {
+    local category="$1"
+
+    echo -e "${BOLD}디자인 패턴 목록${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # 카테고리별 그룹화
+    for cat in "creational" "structural" "behavioral"; do
+        local cat_display=""
+        case "$cat" in
+            "creational") cat_display="생성 패턴" ;;
+            "structural") cat_display="구조 패턴" ;;
+            "behavioral") cat_display="행위 패턴" ;;
+        esac
+
+        if [[ -z "$category" ]] || [[ "$category" == "$cat" ]]; then
+            echo ""
+            echo -e "${CYAN}■ $cat_display${NC}"
+            jq -r ".patterns[] | select(.category == \"$cat\") | \"  \(.id): \(.name) (\(.koreanName))\"" "$PATTERNS_FILE" 2>/dev/null || true
+        fi
+    done
+    echo ""
+}
+
+# 패턴 상세 조회
+pattern_get() {
+    local id="$1"
+
+    if [[ -z "$id" ]]; then
+        echo -e "${RED}오류: 패턴 ID를 지정해주세요.${NC}"
+        echo "예: codeblueprint pattern get singleton"
+        exit 1
+    fi
+
+    local pattern=$(jq -r ".patterns[] | select(.id == \"$id\")" "$PATTERNS_FILE" 2>/dev/null)
+
+    if [[ -z "$pattern" ]] || [[ "$pattern" == "null" ]]; then
+        echo -e "${RED}오류: '$id' 패턴을 찾을 수 없습니다.${NC}"
+        exit 1
+    fi
+
+    local name=$(echo "$pattern" | jq -r '.name')
+    local korean_name=$(echo "$pattern" | jq -r '.koreanName')
+    local category=$(echo "$pattern" | jq -r '.category')
+    local purpose=$(echo "$pattern" | jq -r '.purpose')
+    local difficulty=$(echo "$pattern" | jq -r '.difficulty')
+
+    echo ""
+    echo -e "${BOLD}${BLUE}$name${NC} ($korean_name)"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    local cat_display=""
+    case "$category" in
+        "creational") cat_display="생성 패턴" ;;
+        "structural") cat_display="구조 패턴" ;;
+        "behavioral") cat_display="행위 패턴" ;;
+    esac
+    echo -e "${CYAN}카테고리:${NC} $cat_display"
+    echo -e "${CYAN}난이도:${NC} $difficulty"
+    echo ""
+    echo -e "${YELLOW}목적:${NC}"
+    echo "  $purpose"
+    echo ""
+
+    echo -e "${YELLOW}특징:${NC}"
+    echo "$pattern" | jq -r '.characteristics[]' | while read -r line; do
+        echo "  • $line"
+    done
+    echo ""
+
+    echo -e "${GREEN}장점:${NC}"
+    echo "$pattern" | jq -r '.advantages[]' | while read -r line; do
+        echo "  ✓ $line"
+    done
+    echo ""
+
+    echo -e "${RED}단점:${NC}"
+    echo "$pattern" | jq -r '.disadvantages[]' | while read -r line; do
+        echo "  ✗ $line"
+    done
+    echo ""
+
+    echo -e "${YELLOW}활용 예시:${NC}"
+    echo "$pattern" | jq -r '.useCases[]' | while read -r line; do
+        echo "  • $line"
+    done
+    echo ""
+
+    echo -e "${CYAN}관련 패턴:${NC}"
+    local related=$(echo "$pattern" | jq -r '.relatedPatterns | join(", ")')
+    echo "  $related"
+    echo ""
+}
+
+# 패턴 검색
+pattern_search() {
+    local keyword="$1"
+
+    if [[ -z "$keyword" ]]; then
+        echo -e "${RED}오류: 검색어를 지정해주세요.${NC}"
+        exit 1
+    fi
+
+    local keyword_lower=$(echo "$keyword" | tr '[:upper:]' '[:lower:]')
+
+    echo -e "${BOLD}패턴 검색 결과: '$keyword'${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    local results=$(jq -r ".patterns[] | select(
+        (.name | ascii_downcase | contains(\"$keyword_lower\")) or
+        (.koreanName | contains(\"$keyword\")) or
+        (.purpose | ascii_downcase | contains(\"$keyword_lower\")) or
+        (.characteristics[] | ascii_downcase | contains(\"$keyword_lower\")) or
+        (.useCases[] | ascii_downcase | contains(\"$keyword_lower\"))
+    ) | \"\(.id): \(.name) (\(.koreanName)) - \(.purpose | .[0:50])...\"" "$PATTERNS_FILE" 2>/dev/null)
+
+    if [[ -z "$results" ]]; then
+        echo "검색 결과가 없습니다."
+    else
+        echo "$results"
+    fi
+    echo ""
+}
+
+# 패턴 코드 예시
+pattern_code() {
+    local id="$1"
+    local lang="${2:-kotlin}"
+
+    if [[ -z "$id" ]]; then
+        echo -e "${RED}오류: 패턴 ID를 지정해주세요.${NC}"
+        exit 1
+    fi
+
+    local code=$(jq -r ".patterns[] | select(.id == \"$id\") | .codeExamples.$lang // empty" "$PATTERNS_FILE" 2>/dev/null)
+
+    if [[ -z "$code" ]] || [[ "$code" == "null" ]]; then
+        echo -e "${RED}오류: '$id' 패턴의 $lang 코드를 찾을 수 없습니다.${NC}"
+        echo ""
+        echo "사용 가능한 언어:"
+        jq -r ".patterns[] | select(.id == \"$id\") | .codeExamples | keys[]" "$PATTERNS_FILE" 2>/dev/null
+        exit 1
+    fi
+
+    local name=$(jq -r ".patterns[] | select(.id == \"$id\") | .name" "$PATTERNS_FILE")
+
+    echo -e "${BOLD}$name - $lang 예시 코드${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "$code"
+    echo ""
+}
+
+# 알고리즘 목록 출력
+algorithm_list() {
+    local category="$1"
+
+    echo -e "${BOLD}알고리즘 목록${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # 카테고리 목록
+    local categories=$(jq -r '.algorithms[].category' "$ALGORITHMS_FILE" 2>/dev/null | sort -u)
+
+    for cat in $categories; do
+        local cat_lower=$(echo "$cat" | tr '[:upper:]' '[:lower:]')
+
+        if [[ -z "$category" ]] || [[ "$cat_lower" == "$category" ]]; then
+            echo ""
+            echo -e "${CYAN}■ $cat${NC}"
+            jq -r ".algorithms[] | select(.category == \"$cat\") | \"  \(.id): \(.name) (\(.koreanName))\"" "$ALGORITHMS_FILE" 2>/dev/null || true
+        fi
+    done
+    echo ""
+}
+
+# 알고리즘 상세 조회
+algorithm_get() {
+    local id="$1"
+
+    if [[ -z "$id" ]]; then
+        echo -e "${RED}오류: 알고리즘 ID를 지정해주세요.${NC}"
+        exit 1
+    fi
+
+    local algo=$(jq -r ".algorithms[] | select(.id == \"$id\")" "$ALGORITHMS_FILE" 2>/dev/null)
+
+    if [[ -z "$algo" ]] || [[ "$algo" == "null" ]]; then
+        echo -e "${RED}오류: '$id' 알고리즘을 찾을 수 없습니다.${NC}"
+        exit 1
+    fi
+
+    local name=$(echo "$algo" | jq -r '.name')
+    local korean_name=$(echo "$algo" | jq -r '.koreanName')
+    local category=$(echo "$algo" | jq -r '.category')
+    local purpose=$(echo "$algo" | jq -r '.purpose')
+    local time_best=$(echo "$algo" | jq -r '.timeComplexity.best')
+    local time_avg=$(echo "$algo" | jq -r '.timeComplexity.average')
+    local time_worst=$(echo "$algo" | jq -r '.timeComplexity.worst')
+    local space=$(echo "$algo" | jq -r '.spaceComplexity')
+
+    echo ""
+    echo -e "${BOLD}${BLUE}$name${NC} ($korean_name)"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${CYAN}카테고리:${NC} $category"
+    echo ""
+    echo -e "${YELLOW}목적:${NC}"
+    echo "  $purpose"
+    echo ""
+    echo -e "${YELLOW}시간 복잡도:${NC}"
+    echo "  Best: $time_best | Average: $time_avg | Worst: $time_worst"
+    echo -e "${YELLOW}공간 복잡도:${NC} $space"
+    echo ""
+
+    echo -e "${YELLOW}특징:${NC}"
+    echo "$algo" | jq -r '.characteristics[]' | while read -r line; do
+        echo "  • $line"
+    done
+    echo ""
+
+    echo -e "${GREEN}장점:${NC}"
+    echo "$algo" | jq -r '.advantages[]' | while read -r line; do
+        echo "  ✓ $line"
+    done
+    echo ""
+
+    echo -e "${RED}단점:${NC}"
+    echo "$algo" | jq -r '.disadvantages[]' | while read -r line; do
+        echo "  ✗ $line"
+    done
+    echo ""
+
+    echo -e "${YELLOW}활용 예시:${NC}"
+    echo "$algo" | jq -r '.useCases[]' | while read -r line; do
+        echo "  • $line"
+    done
+    echo ""
+}
+
+# 알고리즘 검색
+algorithm_search() {
+    local keyword="$1"
+
+    if [[ -z "$keyword" ]]; then
+        echo -e "${RED}오류: 검색어를 지정해주세요.${NC}"
+        exit 1
+    fi
+
+    local keyword_lower=$(echo "$keyword" | tr '[:upper:]' '[:lower:]')
+
+    echo -e "${BOLD}알고리즘 검색 결과: '$keyword'${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    local results=$(jq -r ".algorithms[] | select(
+        (.name | ascii_downcase | contains(\"$keyword_lower\")) or
+        (.koreanName | contains(\"$keyword\")) or
+        (.purpose | ascii_downcase | contains(\"$keyword_lower\")) or
+        (.characteristics[] | ascii_downcase | contains(\"$keyword_lower\")) or
+        (.useCases[] | ascii_downcase | contains(\"$keyword_lower\"))
+    ) | \"\(.id): \(.name) (\(.koreanName)) - \(.purpose | .[0:50])...\"" "$ALGORITHMS_FILE" 2>/dev/null)
+
+    if [[ -z "$results" ]]; then
+        echo "검색 결과가 없습니다."
+    else
+        echo "$results"
+    fi
+    echo ""
+}
+
+# 알고리즘 코드 예시
+algorithm_code() {
+    local id="$1"
+    local lang="${2:-kotlin}"
+
+    if [[ -z "$id" ]]; then
+        echo -e "${RED}오류: 알고리즘 ID를 지정해주세요.${NC}"
+        exit 1
+    fi
+
+    local code=$(jq -r ".algorithms[] | select(.id == \"$id\") | .codeExamples.$lang // empty" "$ALGORITHMS_FILE" 2>/dev/null)
+
+    if [[ -z "$code" ]] || [[ "$code" == "null" ]]; then
+        echo -e "${RED}오류: '$id' 알고리즘의 $lang 코드를 찾을 수 없습니다.${NC}"
+        echo ""
+        echo "사용 가능한 언어:"
+        jq -r ".algorithms[] | select(.id == \"$id\") | .codeExamples | keys[]" "$ALGORITHMS_FILE" 2>/dev/null
+        exit 1
+    fi
+
+    local name=$(jq -r ".algorithms[] | select(.id == \"$id\") | .name" "$ALGORITHMS_FILE")
+
+    echo -e "${BOLD}$name - $lang 예시 코드${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "$code"
+    echo ""
+}
+
+# 메인 함수
+main() {
+    check_jq
+    check_data_files
+
+    local command="$1"
+    local subcommand="$2"
+
+    case "$command" in
+        "pattern")
+            case "$subcommand" in
+                "list") pattern_list "$3" ;;
+                "get") pattern_get "$3" ;;
+                "search") pattern_search "$3" ;;
+                "code") pattern_code "$3" "$4" ;;
+                *) show_help ;;
+            esac
+            ;;
+        "algorithm")
+            case "$subcommand" in
+                "list") algorithm_list "$3" ;;
+                "get") algorithm_get "$3" ;;
+                "search") algorithm_search "$3" ;;
+                "code") algorithm_code "$3" "$4" ;;
+                *) show_help ;;
+            esac
+            ;;
+        "help"|"--help"|"-h"|"")
+            show_help
+            ;;
+        *)
+            echo -e "${RED}알 수 없는 명령어: $command${NC}"
+            echo ""
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

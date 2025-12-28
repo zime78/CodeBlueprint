@@ -4,7 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-GoF 23개 디자인 패턴 학습 앱. Kotlin Multiplatform + Compose Multiplatform 기반으로 macOS, Android, iOS 지원.
+GoF 23개 디자인 패턴 및 73개 알고리즘 참조 앱. 개발자가 패턴/알고리즘을 빠르게 검색하고 코드 예시를 확인할 수 있는 데스크톱 도구.
+
+**지원 플랫폼:** macOS, Android, iOS (Kotlin Multiplatform + Compose Multiplatform 기반)
+
+**주요 기능:**
+
+- 23개 GoF 디자인 패턴 (생성/구조/행위)
+- 73개 알고리즘 (9개 카테고리)
+- 북마크 및 빠른 접근 (북마크된 항목을 목록 상단에 칩으로 표시)
+- 통합 검색 (패턴/알고리즘 동시 검색, 탭 UI로 결과 구분)
 
 ## 빌드 및 실행 명령어
 
@@ -21,6 +30,30 @@ GoF 23개 디자인 패턴 학습 앱. Kotlin Multiplatform + Compose Multiplatf
 # SQLDelight 스키마 생성
 ./gradlew generateCommonMainCodeBlueprintDatabaseInterface
 ```
+
+### 배포 빌드
+
+```bash
+# 전체 빌드 + 결과물 수집 (build/outputs/에 수집)
+./gradlew buildAndCollect
+
+# 개별 태스크
+./gradlew collectOutputs   # 빌드 결과물 수집
+./gradlew cleanOutputs     # outputs 폴더 정리
+```
+
+**결과물 경로:**
+- `build/outputs/desktop/app/` - macOS .app 번들
+- `build/outputs/desktop/dmg/` - macOS .dmg 설치 이미지
+- `build/outputs/desktop/jar/` - 실행 가능한 FatJar
+- `build/outputs/android/debug/` - Android Debug APK
+- `build/outputs/android/release/` - Android Release APK
+
+### Android 빌드 요구사항
+
+- Android SDK 설치 필요 (API 35 이상)
+- `local.properties` 파일에 SDK 경로 설정: `sdk.dir=/path/to/Android/sdk`
+- macOS 기본 경로: `~/Library/Android/sdk`
 
 ## 아키텍처
 
@@ -78,6 +111,17 @@ UI (Screen) → ViewModel → UseCase → Repository → SQLDelight
            UiState (StateFlow)
 ```
 
+## 주요 화면
+
+| 화면          | 파일                                          | 설명                                       |
+| ------------- | --------------------------------------------- | ------------------------------------------ |
+| 패턴 목록     | `ui/pattern/list/PatternListScreen.kt`        | 카테고리별 패턴 목록, 북마크 빠른 접근     |
+| 패턴 상세     | `ui/pattern/detail/PatternDetailScreen.kt`    | 패턴 설명, 코드 예시, 관련 패턴            |
+| 알고리즘 목록 | `ui/algorithm/list/AlgorithmListScreen.kt`    | 카테고리별 알고리즘 목록, 북마크 빠른 접근 |
+| 알고리즘 상세 | `ui/algorithm/detail/AlgorithmDetailScreen.kt`| 알고리즘 설명, 코드 예시, 복잡도 정보      |
+| 통합 검색     | `ui/search/SearchScreen.kt`                   | 패턴/알고리즘 동시 검색, 탭 UI로 결과 구분 |
+| 북마크        | `ui/bookmarks/BookmarksScreen.kt`             | 북마크된 패턴 목록                         |
+
 ### 패턴 데이터 초기화
 
 `PatternDataInitializer.initializeIfNeeded()`가 앱 시작 시 호출되어 DB에 23개 GoF 패턴 삽입.
@@ -101,13 +145,36 @@ UI (Screen) → ViewModel → UseCase → Repository → SQLDelight
 
 프로젝트에 MCP 서버와 SKILL 레퍼런스가 포함되어 있습니다.
 
+### MCP CLI (`tools/mcp-cli/`)
+
+터미널에서 패턴/알고리즘 정보를 빠르게 조회할 수 있는 Bash 스크립트.
+
+```bash
+# 패턴 목록
+codeblueprint pattern list
+
+# 패턴 상세
+codeblueprint pattern get singleton
+
+# 패턴 코드 예시
+codeblueprint pattern code factory kotlin
+
+# 알고리즘 목록
+codeblueprint algorithm list sorting
+
+# 알고리즘 검색
+codeblueprint algorithm search 정렬
+```
+
+설치: PATH에 `tools/mcp-cli` 디렉토리 추가
+
 ### MCP 서버 (`tools/mcp-server/`)
 
 ```bash
 # 빌드 및 실행
 cd tools/mcp-server
 npm install
-npm run build
+npx tsc
 ```
 
 ### SKILL 레퍼런스 (`tools/skill/`)

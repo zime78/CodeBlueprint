@@ -21,8 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AssistChip
@@ -144,9 +142,6 @@ fun AlgorithmDetailScreen(
                         onLanguageChange = { language ->
                             viewModel.onEvent(AlgorithmDetailEvent.OnLanguageChange(language))
                         },
-                        onCompleteToggle = {
-                            viewModel.onEvent(AlgorithmDetailEvent.OnCompleteToggle)
-                        },
                         onRelatedAlgorithmClick = { component.onRelatedAlgorithmClick(it) },
                         onCodePlaygroundClick = { component.onCodePlaygroundClick() }
                     )
@@ -198,7 +193,6 @@ private fun DetailContent(
     algorithm: AlgorithmDetailUiModel,
     selectedLanguage: ProgrammingLanguage,
     onLanguageChange: (ProgrammingLanguage) -> Unit,
-    onCompleteToggle: () -> Unit,
     onRelatedAlgorithmClick: (String) -> Unit,
     onCodePlaygroundClick: () -> Unit
 ) {
@@ -295,14 +289,6 @@ private fun DetailContent(
                     onAlgorithmClick = onRelatedAlgorithmClick
                 )
             }
-        }
-
-        // 학습 완료 버튼
-        item {
-            CompleteButton(
-                isCompleted = algorithm.isCompleted,
-                onClick = onCompleteToggle
-            )
         }
 
         // 하단 여백
@@ -714,60 +700,6 @@ private fun RelatedAlgorithmsSection(
                     }
                 )
             }
-        }
-    }
-}
-
-/**
- * 학습 완료 버튼
- */
-@Composable
-private fun CompleteButton(
-    isCompleted: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        color = if (isCompleted) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant
-        },
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = if (isCompleted) {
-                    Icons.Default.CheckCircle
-                } else {
-                    Icons.Default.CheckCircleOutline
-                },
-                contentDescription = null,
-                tint = if (isCompleted) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = if (isCompleted) "학습 완료됨" else "학습 완료하기",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = if (isCompleted) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
-            )
         }
     }
 }

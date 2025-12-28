@@ -1,6 +1,7 @@
 package com.codeblueprint.di
 
 import com.codeblueprint.data.local.DatabaseDriverFactory
+import com.codeblueprint.platform.ClipboardService
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -11,6 +12,7 @@ import org.koin.dsl.module
  */
 val platformModule = module {
     single { DatabaseDriverFactory(androidContext()) }
+    single { ClipboardService(androidContext()) }
 }
 
 /**

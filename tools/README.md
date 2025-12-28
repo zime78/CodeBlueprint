@@ -1,4 +1,4 @@
-# CodeBlueprint Tools - MCP 서버 & SKILL 사용 가이드
+# CodeBlueprint Tools - MCP 서버, CLI & SKILL 사용 가이드
 
 Claude Code와 연동하여 디자인 패턴 및 알고리즘 정보를 활용할 수 있는 도구 모음입니다.
 
@@ -8,12 +8,13 @@ Claude Code와 연동하여 디자인 패턴 및 알고리즘 정보를 활용�
 
 1. [소개](#소개)
 2. [사전 요구사항](#사전-요구사항)
-3. [MCP 서버 설정](#mcp-서버-설정)
-4. [SKILL 설정](#skill-설정)
-5. [사용 예시](#사용-예시)
-6. [다른 프로젝트에서 사용하기](#다른-프로젝트에서-사용하기)
-7. [데이터 구조](#데이터-구조)
-8. [문제 해결](#문제-해결)
+3. [MCP CLI 설정](#mcp-cli-설정)
+4. [MCP 서버 설정](#mcp-서버-설정)
+5. [SKILL 설정](#skill-설정)
+6. [사용 예시](#사용-예시)
+7. [다른 프로젝트에서 사용하기](#다른-프로젝트에서-사용하기)
+8. [데이터 구조](#데이터-구조)
+9. [문제 해결](#문제-해결)
 
 ---
 
@@ -67,19 +68,102 @@ claude --version
 
 ```
 tools/
-├── mcp-server/          # MCP 서버
-│   ├── package.json     # Node.js 프로젝트 설정
-│   ├── tsconfig.json    # TypeScript 설정
+├── README.md                 # 이 문서
+├── mcp-cli/                  # MCP CLI (Bash 스크립트)
+│   ├── codeblueprint         # 메인 CLI 스크립트
+│   ├── README.md             # CLI 사용법 문서
+│   └── completions/          # 셸 자동완성
+│       ├── codeblueprint.bash
+│       └── codeblueprint.zsh
+├── mcp-server/               # MCP 서버
+│   ├── package.json          # Node.js 프로젝트 설정
+│   ├── tsconfig.json         # TypeScript 설정
 │   ├── src/
-│   │   └── index.ts     # MCP 서버 메인 코드
-│   └── data/
-│       ├── patterns.json     # 23개 패턴 데이터
-│       └── algorithms.json   # 73개 알고리즘 데이터
-└── skill/               # SKILL 파일
-    ├── SKILL.md         # 스킬 정의
-    └── references/      # 레퍼런스 문서
-        ├── patterns/
-        └── algorithms/
+│   │   └── index.ts          # MCP 서버 메인 코드
+│   ├── data/
+│   │   ├── patterns.json     # 23개 패턴 데이터
+│   │   └── algorithms.json   # 73개 알고리즘 데이터
+│   └── dist/                 # 빌드 출력 (npm run build)
+└── skill/                    # SKILL 파일
+    ├── SKILL.md              # 스킬 정의
+    └── references/           # 레퍼런스 문서
+        ├── patterns/         # 패턴 문서 (4개)
+        │   ├── index.md
+        │   ├── creational.md
+        │   ├── structural.md
+        │   └── behavioral.md
+        ├── algorithms/       # 알고리즘 문서 (10개)
+        │   ├── index.md
+        │   ├── sorting.md
+        │   ├── searching.md
+        │   ├── graph.md
+        │   ├── dynamic-programming.md
+        │   ├── divide-conquer.md
+        │   ├── greedy.md
+        │   ├── backtracking.md
+        │   ├── string.md
+        │   └── math.md
+        └── code_templates.md # 언어별 코드 템플릿
+```
+
+---
+
+## MCP CLI 설정
+
+MCP CLI는 터미널에서 패턴/알고리즘 정보를 빠르게 조회할 수 있는 Bash 스크립트입니다.
+
+### Step 1: PATH에 추가
+
+```bash
+# .zshrc 또는 .bashrc에 추가
+export PATH="$PATH:/path/to/CodeBlueprint/tools/mcp-cli"
+
+# 적용
+source ~/.zshrc  # 또는 source ~/.bashrc
+```
+
+### Step 2: 실행 권한 부여
+
+```bash
+chmod +x /path/to/CodeBlueprint/tools/mcp-cli/codeblueprint
+```
+
+### Step 3: 사용
+
+```bash
+# 패턴 목록
+codeblueprint pattern list
+
+# 패턴 상세
+codeblueprint pattern get singleton
+
+# 패턴 코드 예시
+codeblueprint pattern code factory-method kotlin
+
+# 알고리즘 목록 (카테고리별)
+codeblueprint algorithm list sorting
+
+# 알고리즘 검색
+codeblueprint algorithm search 정렬
+
+# 도움말
+codeblueprint help
+```
+
+### Step 4: 자동완성 설정 (선택)
+
+```bash
+# Zsh 사용자
+source /path/to/CodeBlueprint/tools/mcp-cli/completions/codeblueprint.zsh
+
+# 또는 .zshrc에 추가
+echo 'source /path/to/CodeBlueprint/tools/mcp-cli/completions/codeblueprint.zsh' >> ~/.zshrc
+
+# Bash 사용자
+source /path/to/CodeBlueprint/tools/mcp-cli/completions/codeblueprint.bash
+
+# 또는 .bashrc에 추가
+echo 'source /path/to/CodeBlueprint/tools/mcp-cli/completions/codeblueprint.bash' >> ~/.bashrc
 ```
 
 ---

@@ -1,16 +1,13 @@
 package com.codeblueprint.presentation.pattern.list
 
 import com.codeblueprint.domain.model.DesignPattern
-import com.codeblueprint.domain.model.LearningProgress
 import com.codeblueprint.domain.model.PatternCategory
-import com.codeblueprint.domain.usecase.GetLearningProgressUseCase
 import com.codeblueprint.domain.usecase.GetPatternsUseCase
 import com.codeblueprint.domain.usecase.ToggleBookmarkUseCase
 import com.codeblueprint.presentation.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -18,7 +15,6 @@ import kotlinx.coroutines.launch
  */
 class PatternListViewModel(
     private val getPatternsUseCase: GetPatternsUseCase,
-    private val getLearningProgressUseCase: GetLearningProgressUseCase,
     private val toggleBookmarkUseCase: ToggleBookmarkUseCase
 ) : BaseViewModel() {
 
@@ -42,13 +38,8 @@ class PatternListViewModel(
             _uiState.value = PatternListUiState.Loading
 
             try {
-                combine(
-                    getPatternsUseCase(),
-                    getLearningProgressUseCase.getAll()
-                ) { patterns, progressList ->
-                    mapToUiState(patterns, progressList)
-                }.collect { state ->
-                    _uiState.value = state
+                getPatternsUseCase().collect { patterns ->
+                    _uiState.value = mapToUiState(patterns)
                 }
             } catch (e: Exception) {
                 _uiState.value = PatternListUiState.Error(
@@ -97,26 +88,17 @@ class PatternListViewModel(
     /**
      * Domain 모델을 UI 상태로 변환
      */
-    private fun mapToUiState(
-        patterns: List<DesignPattern>,
-        progressList: List<LearningProgress>
-    ): PatternListUiState {
+    private fun mapToUiState(patterns: List<DesignPattern>): PatternListUiState {
         if (patterns.isEmpty()) {
             return PatternListUiState.Success(
-                patternsByCategory = emptyMap(),
-                learningProgress = 0f,
-                completedCount = 0,
-                totalCount = 0
+                patternsByCategory = emptyMap()
             )
         }
-
-        val progressMap = progressList.associateBy { it.patternId }
 
         val patternsByCategory = patterns
             .groupBy { it.category }
             .mapValues { (_, categoryPatterns) ->
                 categoryPatterns.map { pattern ->
-                    val progress = progressMap[pattern.id]
                     PatternUiModel(
                         id = pattern.id,
                         name = pattern.name,
@@ -125,25 +107,13 @@ class PatternListViewModel(
                         purpose = pattern.purpose,
                         difficulty = pattern.difficulty.ordinal + 1,
                         frequency = pattern.frequency,
-                        isBookmarked = progress?.isBookmarked ?: false,
-                        isCompleted = progress?.isCompleted ?: false
+                        isBookmarked = pattern.isBookmarked
                     )
                 }.sortedBy { it.name }
             }
 
-        val completedCount = progressList.count { it.isCompleted }
-        val totalCount = patterns.size
-        val learningProgress = if (totalCount > 0) {
-            completedCount.toFloat() / totalCount.toFloat()
-        } else {
-            0f
-        }
-
         return PatternListUiState.Success(
-            patternsByCategory = patternsByCategory,
-            learningProgress = learningProgress,
-            completedCount = completedCount,
-            totalCount = totalCount
+            patternsByCategory = patternsByCategory
         )
     }
 }

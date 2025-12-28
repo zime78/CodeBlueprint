@@ -13,12 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
@@ -28,7 +28,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -167,17 +166,51 @@ private fun SuccessContent(
     onBookmarkToggle: (String) -> Unit,
     onCategoryToggle: (AlgorithmCategory) -> Unit
 ) {
+    // 북마크된 알고리즘 추출
+    val bookmarkedAlgorithms = state.algorithmsByCategory.values
+        .flatten()
+        .filter { it.isBookmarked }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // 학습 진도 카드
-        item {
-            LearningProgressCard(
-                progress = state.learningProgress,
-                completedCount = state.completedCount,
-                totalCount = state.totalCount
-            )
+        // 빠른 접근 섹션 (북마크된 알고리즘이 있을 때만 표시)
+        if (bookmarkedAlgorithms.isNotEmpty()) {
+            item(key = "quick_access_header") {
+                Text(
+                    text = "빠른 접근",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            item(key = "quick_access_row") {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item { Spacer(modifier = Modifier.width(8.dp)) }
+                    items(
+                        items = bookmarkedAlgorithms,
+                        key = { "quick_${it.id}" }
+                    ) { algorithm ->
+                        QuickAccessChip(
+                            algorithm = algorithm,
+                            onClick = { onAlgorithmClick(algorithm.id) }
+                        )
+                    }
+                    item { Spacer(modifier = Modifier.width(8.dp)) }
+                }
+            }
+
+            item(key = "quick_access_divider") {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
 
         // 카테고리별 알고리즘 목록
@@ -218,52 +251,33 @@ private fun SuccessContent(
 }
 
 /**
- * 학습 진도 카드
+ * 빠른 접근 칩
  */
 @Composable
-private fun LearningProgressCard(
-    progress: Float,
-    completedCount: Int,
-    totalCount: Int
+private fun QuickAccessChip(
+    algorithm: AlgorithmUiModel,
+    onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.primaryContainer
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "알고리즘 학습 진도",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = "$completedCount/$totalCount (${(progress * 100).toInt()}%)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
+            Icon(
+                imageVector = Icons.Default.Bookmark,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = algorithm.name,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
     }
@@ -345,17 +359,6 @@ private fun AlgorithmItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 완료 표시
-            if (algorithm.isCompleted) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "완료",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-            }
-
             // 알고리즘 정보
             Column(
                 modifier = Modifier.weight(1f)

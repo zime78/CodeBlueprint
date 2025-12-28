@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
@@ -33,11 +34,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,8 +75,28 @@ fun CodePlaygroundScreen(
     val uiState by viewModel.uiState.collectAsState()
     val code by viewModel.code.collectAsState()
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
+    val copyMessage by viewModel.copyMessage.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // 복사 메시지 Snackbar 표시
+    LaunchedEffect(copyMessage) {
+        copyMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.onEvent(CodePlaygroundEvent.OnClearCopyMessage)
+        }
+    }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.inverseSurface,
+                    contentColor = MaterialTheme.colorScheme.inverseOnSurface
+                )
+            }
+        },
         topBar = {
             TopAppBar(
                 title = { Text("코드 플레이그라운드") },
@@ -118,6 +143,7 @@ fun CodePlaygroundScreen(
             CodeEditor(
                 code = code,
                 onCodeChange = { viewModel.onEvent(CodePlaygroundEvent.OnCodeChange(it)) },
+                onCopyCode = { viewModel.onEvent(CodePlaygroundEvent.OnCopyCode) },
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -126,6 +152,7 @@ fun CodePlaygroundScreen(
             // 출력 패널
             OutputPanel(
                 uiState = uiState,
+                onCopyOutput = { viewModel.onEvent(CodePlaygroundEvent.OnCopyOutput) },
                 onClear = { viewModel.onEvent(CodePlaygroundEvent.OnClearOutput) },
                 modifier = Modifier
                     .weight(0.4f)
@@ -215,6 +242,7 @@ private fun ControlBar(
 private fun CodeEditor(
     code: String,
     onCodeChange: (String) -> Unit,
+    onCopyCode: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -223,51 +251,85 @@ private fun CodeEditor(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
         )
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp)
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            val scrollState = rememberScrollState()
-            val horizontalScrollState = rememberScrollState()
+            // 헤더
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "소스",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
-            BasicTextField(
-                value = code,
-                onValueChange = onCodeChange,
-                textStyle = TextStyle(
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                IconButton(
+                    onClick = onCopyCode,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "코드 복사",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // 코드 영역
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .horizontalScroll(horizontalScrollState),
-                decorationBox = { innerTextField ->
-                    Row {
-                        // 라인 넘버
-                        LineNumbers(
-                            lineCount = code.lines().size,
-                            modifier = Modifier.padding(end = 12.dp)
-                        )
-                        // 코드 영역
-                        Box(modifier = Modifier.weight(1f)) {
-                            if (code.isEmpty()) {
-                                Text(
-                                    text = "코드를 입력하세요...",
-                                    style = TextStyle(
-                                        fontFamily = FontFamily.Monospace,
-                                        fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    .padding(12.dp)
+            ) {
+                val scrollState = rememberScrollState()
+                val horizontalScrollState = rememberScrollState()
+
+                BasicTextField(
+                    value = code,
+                    onValueChange = onCodeChange,
+                    textStyle = TextStyle(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .horizontalScroll(horizontalScrollState),
+                    decorationBox = { innerTextField ->
+                        Row {
+                            // 라인 넘버
+                            LineNumbers(
+                                lineCount = code.lines().size,
+                                modifier = Modifier.padding(end = 12.dp)
+                            )
+                            // 코드 영역
+                            Box(modifier = Modifier.weight(1f)) {
+                                if (code.isEmpty()) {
+                                    Text(
+                                        text = "코드를 입력하세요...",
+                                        style = TextStyle(
+                                            fontFamily = FontFamily.Monospace,
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                        )
                                     )
-                                )
+                                }
+                                innerTextField()
                             }
-                            innerTextField()
                         }
                     }
-                }
-            )
+                )
+            }
         }
     }
 }
@@ -300,6 +362,7 @@ private fun LineNumbers(
 @Composable
 private fun OutputPanel(
     uiState: CodePlaygroundUiState,
+    onCopyOutput: () -> Unit,
     onClear: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -317,7 +380,7 @@ private fun OutputPanel(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -328,16 +391,30 @@ private fun OutputPanel(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                IconButton(
-                    onClick = onClear,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "출력 지우기",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Row {
+                    IconButton(
+                        onClick = onCopyOutput,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = "출력 복사",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = onClear,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "출력 지우기",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 

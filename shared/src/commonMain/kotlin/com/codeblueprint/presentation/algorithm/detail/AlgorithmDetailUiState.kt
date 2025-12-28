@@ -47,8 +47,7 @@ data class AlgorithmDetailUiModel(
     val relatedAlgorithms: List<RelatedAlgorithmUiModel>,
     val difficulty: Difficulty,
     val frequency: Int,
-    val isBookmarked: Boolean,
-    val isCompleted: Boolean
+    val isBookmarked: Boolean
 )
 
 /**
@@ -68,11 +67,6 @@ sealed class AlgorithmDetailEvent {
      * 북마크 토글
      */
     object OnBookmarkToggle : AlgorithmDetailEvent()
-
-    /**
-     * 학습 완료 토글
-     */
-    object OnCompleteToggle : AlgorithmDetailEvent()
 
     /**
      * 코드 언어 변경

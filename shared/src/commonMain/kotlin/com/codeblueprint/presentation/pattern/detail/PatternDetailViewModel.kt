@@ -1,18 +1,14 @@
 package com.codeblueprint.presentation.pattern.detail
 
 import com.codeblueprint.domain.model.DesignPattern
-import com.codeblueprint.domain.model.LearningProgress
 import com.codeblueprint.domain.model.ProgrammingLanguage
-import com.codeblueprint.domain.usecase.GetLearningProgressUseCase
 import com.codeblueprint.domain.usecase.GetPatternDetailUseCase
 import com.codeblueprint.domain.usecase.GetPatternsUseCase
 import com.codeblueprint.domain.usecase.ToggleBookmarkUseCase
-import com.codeblueprint.domain.usecase.ToggleCompleteUseCase
 import com.codeblueprint.presentation.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -23,9 +19,7 @@ class PatternDetailViewModel(
     private val patternId: String,
     private val getPatternDetailUseCase: GetPatternDetailUseCase,
     private val getPatternsUseCase: GetPatternsUseCase,
-    private val getLearningProgressUseCase: GetLearningProgressUseCase,
-    private val toggleBookmarkUseCase: ToggleBookmarkUseCase,
-    private val toggleCompleteUseCase: ToggleCompleteUseCase
+    private val toggleBookmarkUseCase: ToggleBookmarkUseCase
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow<PatternDetailUiState>(PatternDetailUiState.Loading)
@@ -49,15 +43,12 @@ class PatternDetailViewModel(
                 val pattern = getPatternDetailUseCase(patternId)
 
                 if (pattern != null) {
-                    // 학습 진도와 관련 패턴을 함께 로드
-                    getLearningProgressUseCase(patternId).collect { progress ->
-                        val allPatterns = getPatternsUseCase().first()
-                        val relatedPatterns = getRelatedPatterns(pattern, allPatterns)
+                    val allPatterns = getPatternsUseCase().first()
+                    val relatedPatterns = getRelatedPatterns(pattern, allPatterns)
 
-                        _uiState.value = PatternDetailUiState.Success(
-                            pattern = mapToUiModel(pattern, progress, relatedPatterns)
-                        )
-                    }
+                    _uiState.value = PatternDetailUiState.Success(
+                        pattern = mapToUiModel(pattern, relatedPatterns)
+                    )
                 } else {
                     _uiState.value = PatternDetailUiState.Error("패턴을 찾을 수 없습니다.")
                 }
@@ -75,7 +66,6 @@ class PatternDetailViewModel(
     fun onEvent(event: PatternDetailEvent) {
         when (event) {
             is PatternDetailEvent.OnBookmarkToggle -> toggleBookmark()
-            is PatternDetailEvent.OnCompleteToggle -> toggleComplete()
             is PatternDetailEvent.OnLanguageChange -> changeLanguage(event.language)
             else -> { /* Navigation 이벤트는 Screen에서 처리 */ }
         }
@@ -88,19 +78,8 @@ class PatternDetailViewModel(
         viewModelScope.launch {
             try {
                 toggleBookmarkUseCase(patternId)
-            } catch (e: Exception) {
-                // 에러 처리
-            }
-        }
-    }
-
-    /**
-     * 학습 완료 토글
-     */
-    private fun toggleComplete() {
-        viewModelScope.launch {
-            try {
-                toggleCompleteUseCase(patternId)
+                // 상태 다시 로드
+                loadPatternDetail()
             } catch (e: Exception) {
                 // 에러 처리
             }
@@ -138,7 +117,6 @@ class PatternDetailViewModel(
      */
     private fun mapToUiModel(
         pattern: DesignPattern,
-        progress: LearningProgress?,
         relatedPatterns: List<RelatedPatternUiModel>
     ): PatternDetailUiModel {
         return PatternDetailUiModel(
@@ -156,8 +134,7 @@ class PatternDetailViewModel(
             relatedPatterns = relatedPatterns,
             difficulty = pattern.difficulty,
             frequency = pattern.frequency,
-            isBookmarked = progress?.isBookmarked ?: false,
-            isCompleted = progress?.isCompleted ?: false
+            isBookmarked = pattern.isBookmarked
         )
     }
 }

@@ -2,6 +2,7 @@ package com.codeblueprint.presentation.playground
 
 import com.codeblueprint.domain.model.ProgrammingLanguage
 import com.codeblueprint.domain.usecase.ExecuteCodeUseCase
+import com.codeblueprint.platform.ClipboardService
 import com.codeblueprint.presentation.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.launch
  */
 class CodePlaygroundViewModel(
     private val executeCodeUseCase: ExecuteCodeUseCase,
+    private val clipboardService: ClipboardService,
     private val initialCode: String = "",
     private val initialLanguage: ProgrammingLanguage = ProgrammingLanguage.KOTLIN
 ) : BaseViewModel() {
@@ -25,6 +27,9 @@ class CodePlaygroundViewModel(
 
     private val _selectedLanguage = MutableStateFlow(initialLanguage)
     val selectedLanguage: StateFlow<ProgrammingLanguage> = _selectedLanguage.asStateFlow()
+
+    private val _copyMessage = MutableStateFlow<String?>(null)
+    val copyMessage: StateFlow<String?> = _copyMessage.asStateFlow()
 
     /**
      * 이벤트 처리
@@ -49,8 +54,51 @@ class CodePlaygroundViewModel(
                 _code.value = getDefaultCode(_selectedLanguage.value)
                 _uiState.value = CodePlaygroundUiState.Idle()
             }
+            is CodePlaygroundEvent.OnCopyCode -> {
+                copyCode()
+            }
+            is CodePlaygroundEvent.OnCopyOutput -> {
+                copyOutput()
+            }
+            is CodePlaygroundEvent.OnClearCopyMessage -> {
+                _copyMessage.value = null
+            }
             else -> { /* Navigation 이벤트는 Screen에서 처리 */ }
         }
+    }
+
+    /**
+     * 코드 복사
+     */
+    private fun copyCode() {
+        val currentCode = _code.value
+        if (currentCode.isBlank()) {
+            _copyMessage.value = "복사할 코드가 없습니다"
+            return
+        }
+
+        val success = clipboardService.copyToClipboard(currentCode)
+        _copyMessage.value = if (success) "코드가 복사되었습니다" else "복사에 실패했습니다"
+    }
+
+    /**
+     * 출력 복사
+     */
+    private fun copyOutput() {
+        val output = when (val state = _uiState.value) {
+            is CodePlaygroundUiState.Idle -> state.output
+            is CodePlaygroundUiState.Success -> state.result.output
+            is CodePlaygroundUiState.Error -> state.message
+            else -> ""
+        }
+
+        if (output.isBlank()) {
+            _copyMessage.value = "복사할 출력이 없습니다"
+            return
+        }
+
+        val success = clipboardService.copyToClipboard(output)
+        _copyMessage.value = if (success) "출력이 복사되었습니다" else "복사에 실패했습니다"
     }
 
     /**

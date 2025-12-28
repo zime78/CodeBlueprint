@@ -2,15 +2,12 @@ package com.codeblueprint.presentation.algorithm.list
 
 import com.codeblueprint.domain.model.Algorithm
 import com.codeblueprint.domain.model.AlgorithmCategory
-import com.codeblueprint.domain.model.LearningProgress
-import com.codeblueprint.domain.usecase.GetAlgorithmLearningProgressUseCase
 import com.codeblueprint.domain.usecase.GetAlgorithmsUseCase
 import com.codeblueprint.domain.usecase.ToggleAlgorithmBookmarkUseCase
 import com.codeblueprint.presentation.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -18,7 +15,6 @@ import kotlinx.coroutines.launch
  */
 class AlgorithmListViewModel(
     private val getAlgorithmsUseCase: GetAlgorithmsUseCase,
-    private val getLearningProgressUseCase: GetAlgorithmLearningProgressUseCase,
     private val toggleBookmarkUseCase: ToggleAlgorithmBookmarkUseCase
 ) : BaseViewModel() {
 
@@ -42,13 +38,8 @@ class AlgorithmListViewModel(
             _uiState.value = AlgorithmListUiState.Loading
 
             try {
-                combine(
-                    getAlgorithmsUseCase(),
-                    getLearningProgressUseCase.getAll()
-                ) { algorithms, progressList ->
-                    mapToUiState(algorithms, progressList)
-                }.collect { state ->
-                    _uiState.value = state
+                getAlgorithmsUseCase().collect { algorithms ->
+                    _uiState.value = mapToUiState(algorithms)
                 }
             } catch (e: Exception) {
                 _uiState.value = AlgorithmListUiState.Error(
@@ -97,26 +88,17 @@ class AlgorithmListViewModel(
     /**
      * Domain 모델을 UI 상태로 변환
      */
-    private fun mapToUiState(
-        algorithms: List<Algorithm>,
-        progressList: List<LearningProgress>
-    ): AlgorithmListUiState {
+    private fun mapToUiState(algorithms: List<Algorithm>): AlgorithmListUiState {
         if (algorithms.isEmpty()) {
             return AlgorithmListUiState.Success(
-                algorithmsByCategory = emptyMap(),
-                learningProgress = 0f,
-                completedCount = 0,
-                totalCount = 0
+                algorithmsByCategory = emptyMap()
             )
         }
-
-        val progressMap = progressList.associateBy { it.patternId } // patternId를 algorithmId로 사용
 
         val algorithmsByCategory = algorithms
             .groupBy { it.category }
             .mapValues { (_, categoryAlgorithms) ->
                 categoryAlgorithms.map { algorithm ->
-                    val progress = progressMap[algorithm.id]
                     AlgorithmUiModel(
                         id = algorithm.id,
                         name = algorithm.name,
@@ -127,25 +109,13 @@ class AlgorithmListViewModel(
                         spaceComplexity = algorithm.spaceComplexity,
                         difficulty = algorithm.difficulty.ordinal + 1,
                         frequency = algorithm.frequency,
-                        isBookmarked = progress?.isBookmarked ?: false,
-                        isCompleted = progress?.isCompleted ?: false
+                        isBookmarked = algorithm.isBookmarked
                     )
                 }.sortedBy { it.name }
             }
 
-        val completedCount = progressList.count { it.isCompleted }
-        val totalCount = algorithms.size
-        val learningProgress = if (totalCount > 0) {
-            completedCount.toFloat() / totalCount.toFloat()
-        } else {
-            0f
-        }
-
         return AlgorithmListUiState.Success(
-            algorithmsByCategory = algorithmsByCategory,
-            learningProgress = learningProgress,
-            completedCount = completedCount,
-            totalCount = totalCount
+            algorithmsByCategory = algorithmsByCategory
         )
     }
 }

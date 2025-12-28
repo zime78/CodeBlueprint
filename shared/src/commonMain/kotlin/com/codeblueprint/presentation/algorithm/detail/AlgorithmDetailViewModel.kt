@@ -1,13 +1,10 @@
 package com.codeblueprint.presentation.algorithm.detail
 
 import com.codeblueprint.domain.model.Algorithm
-import com.codeblueprint.domain.model.LearningProgress
 import com.codeblueprint.domain.model.ProgrammingLanguage
 import com.codeblueprint.domain.usecase.GetAlgorithmDetailUseCase
-import com.codeblueprint.domain.usecase.GetAlgorithmLearningProgressUseCase
 import com.codeblueprint.domain.usecase.GetAlgorithmsUseCase
 import com.codeblueprint.domain.usecase.ToggleAlgorithmBookmarkUseCase
-import com.codeblueprint.domain.usecase.ToggleAlgorithmCompleteUseCase
 import com.codeblueprint.presentation.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,9 +19,7 @@ class AlgorithmDetailViewModel(
     private val algorithmId: String,
     private val getAlgorithmDetailUseCase: GetAlgorithmDetailUseCase,
     private val getAlgorithmsUseCase: GetAlgorithmsUseCase,
-    private val getLearningProgressUseCase: GetAlgorithmLearningProgressUseCase,
-    private val toggleBookmarkUseCase: ToggleAlgorithmBookmarkUseCase,
-    private val toggleCompleteUseCase: ToggleAlgorithmCompleteUseCase
+    private val toggleBookmarkUseCase: ToggleAlgorithmBookmarkUseCase
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow<AlgorithmDetailUiState>(AlgorithmDetailUiState.Loading)
@@ -48,15 +43,12 @@ class AlgorithmDetailViewModel(
                 val algorithm = getAlgorithmDetailUseCase(algorithmId)
 
                 if (algorithm != null) {
-                    // 학습 진도와 관련 알고리즘을 함께 로드
-                    getLearningProgressUseCase(algorithmId).collect { progress ->
-                        val allAlgorithms = getAlgorithmsUseCase().first()
-                        val relatedAlgorithms = getRelatedAlgorithms(algorithm, allAlgorithms)
+                    val allAlgorithms = getAlgorithmsUseCase().first()
+                    val relatedAlgorithms = getRelatedAlgorithms(algorithm, allAlgorithms)
 
-                        _uiState.value = AlgorithmDetailUiState.Success(
-                            algorithm = mapToUiModel(algorithm, progress, relatedAlgorithms)
-                        )
-                    }
+                    _uiState.value = AlgorithmDetailUiState.Success(
+                        algorithm = mapToUiModel(algorithm, relatedAlgorithms)
+                    )
                 } else {
                     _uiState.value = AlgorithmDetailUiState.Error("알고리즘을 찾을 수 없습니다.")
                 }
@@ -74,7 +66,6 @@ class AlgorithmDetailViewModel(
     fun onEvent(event: AlgorithmDetailEvent) {
         when (event) {
             is AlgorithmDetailEvent.OnBookmarkToggle -> toggleBookmark()
-            is AlgorithmDetailEvent.OnCompleteToggle -> toggleComplete()
             is AlgorithmDetailEvent.OnLanguageChange -> changeLanguage(event.language)
             else -> { /* Navigation 이벤트는 Screen에서 처리 */ }
         }
@@ -87,19 +78,8 @@ class AlgorithmDetailViewModel(
         viewModelScope.launch {
             try {
                 toggleBookmarkUseCase(algorithmId)
-            } catch (e: Exception) {
-                // 에러 처리
-            }
-        }
-    }
-
-    /**
-     * 학습 완료 토글
-     */
-    private fun toggleComplete() {
-        viewModelScope.launch {
-            try {
-                toggleCompleteUseCase(algorithmId)
+                // 상태 다시 로드
+                loadAlgorithmDetail()
             } catch (e: Exception) {
                 // 에러 처리
             }
@@ -137,7 +117,6 @@ class AlgorithmDetailViewModel(
      */
     private fun mapToUiModel(
         algorithm: Algorithm,
-        progress: LearningProgress?,
         relatedAlgorithms: List<RelatedAlgorithmUiModel>
     ): AlgorithmDetailUiModel {
         return AlgorithmDetailUiModel(
@@ -156,8 +135,7 @@ class AlgorithmDetailViewModel(
             relatedAlgorithms = relatedAlgorithms,
             difficulty = algorithm.difficulty,
             frequency = algorithm.frequency,
-            isBookmarked = progress?.isBookmarked ?: false,
-            isCompleted = progress?.isCompleted ?: false
+            isBookmarked = algorithm.isBookmarked
         )
     }
 }
