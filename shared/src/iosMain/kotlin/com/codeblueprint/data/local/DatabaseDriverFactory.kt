@@ -3,15 +3,19 @@ package com.codeblueprint.data.local
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import com.codeblueprint.db.CodeBlueprintDatabase
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSBundle
+import platform.Foundation.NSDate
 import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
+import platform.Foundation.timeIntervalSince1970
 
 /**
  * iOS용 SQLDelight 드라이버 팩토리
  */
+@OptIn(ExperimentalForeignApi::class)
 actual class DatabaseDriverFactory {
 
     private val databaseName = "codeblueprint.db"
@@ -194,7 +198,7 @@ actual class DatabaseDriverFactory {
 
             // 4. 버전 업데이트
             newQueries.upsertMetadata("data_version", toVersion)
-            newQueries.upsertMetadata("migrated_at", platform.Foundation.NSDate().timeIntervalSince1970.toLong().toString())
+            newQueries.upsertMetadata("migrated_at", NSDate().timeIntervalSince1970.toLong().toString())
 
             newDriver.close()
             println("Data migration completed successfully")
