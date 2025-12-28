@@ -160,7 +160,10 @@ CodeBlueprint/
 │   └── src/commonMain/ui/      # Screens, Theme, Navigation
 ├── desktopApp/                 # macOS 앱 진입점
 ├── androidApp/                 # Android 앱 진입점
-└── iosApp/                     # iOS 앱 진입점 (Swift)
+├── iosApp/                     # iOS 앱 진입점 (Swift)
+└── tools/                      # Claude Code 연동 도구
+    ├── mcp-server/             # MCP 서버 (패턴/알고리즘 조회 API)
+    └── skill/                  # SKILL 레퍼런스 문서
 ```
 
 더 자세한 아키텍처 정보는 [ARCHITECTURE.md](docs/ARCHITECTURE.md)를 참조하세요.
@@ -173,7 +176,14 @@ CodeBlueprint는 [Claude Code](https://claude.ai/code)와 연동하여 디자인
 
 ### MCP 서버
 
-`~/.claude/mcp-servers/codeblueprint/`에 MCP 서버가 설치되어 있으며, 10개의 도구를 제공합니다:
+프로젝트의 `tools/mcp-server/` 디렉토리에 MCP 서버 소스가 포함되어 있으며, 10개의 도구를 제공합니다:
+
+```bash
+# MCP 서버 빌드 및 실행
+cd tools/mcp-server
+npm install
+npm run build
+```
 
 | 도구 | 설명 |
 |------|------|
@@ -188,6 +198,8 @@ CodeBlueprint는 [Claude Code](https://claude.ai/code)와 연동하여 디자인
 | `recommend_algorithm` | 문제에 맞는 알고리즘 추천 |
 
 ### SKILL
+
+프로젝트의 `tools/skill/` 디렉토리에 SKILL 레퍼런스 문서가 포함되어 있습니다.
 
 `/pattern` 또는 `/algorithm` 명령으로 코드를 생성할 수 있습니다:
 
