@@ -219,19 +219,22 @@ Compose Multiplatform 기반 공유 UI.
 ui/
 ├── App.kt                    # 루트 컴포저블
 ├── navigation/
-│   └── RootComponent.kt      # Decompose 네비게이션
+│   └── RootComponent.kt      # Decompose 네비게이션 (MainComponent)
 ├── theme/
 │   └── Theme.kt              # Material 3 테마
+├── main/
+│   └── MainScreen.kt         # 탭 기반 홈 (패턴/알고리즘/아키텍처)
 ├── pattern/
-│   ├── list/PatternListScreen.kt
+│   ├── list/PatternListScreen.kt  # PatternListContent 재사용
 │   └── detail/PatternDetailScreen.kt
 ├── algorithm/
-│   ├── list/AlgorithmListScreen.kt
+│   ├── list/AlgorithmListScreen.kt  # AlgorithmListContent 재사용
 │   └── detail/AlgorithmDetailScreen.kt
+├── architecture/
+│   └── ArchitectureListScreen.kt    # ArchitectureListContent 재사용
 ├── search/SearchScreen.kt
 ├── bookmarks/BookmarksScreen.kt
 ├── settings/SettingsScreen.kt
-├── architecture/
 ├── ai/AIAdvisorScreen.kt
 └── playground/CodePlaygroundScreen.kt
 ```
@@ -240,9 +243,8 @@ ui/
 
 ```kotlin
 sealed class Config : Parcelable {
-    data object PatternList : Config()
+    data object Main : Config()  // 탭 기반 메인 화면
     data class PatternDetail(val patternId: String) : Config()
-    data object AlgorithmList : Config()
     data class AlgorithmDetail(val algorithmId: String) : Config()
     data object ArchitectureList : Config()
     data class ArchitectureDetail(val architectureId: String) : Config()

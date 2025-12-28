@@ -116,29 +116,17 @@ fun PatternListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (val state = uiState) {
-                is PatternListUiState.Loading -> {
-                    LoadingContent()
+            PatternListContent(
+                uiState = uiState,
+                expandedCategories = expandedCategories,
+                onPatternClick = { component.onPatternClick(it) },
+                onBookmarkToggle = { patternId ->
+                    viewModel.onEvent(PatternListEvent.OnBookmarkToggle(patternId))
+                },
+                onCategoryToggle = { category ->
+                    viewModel.onEvent(PatternListEvent.OnCategoryToggle(category))
                 }
-
-                is PatternListUiState.Success -> {
-                    SuccessContent(
-                        state = state,
-                        expandedCategories = expandedCategories,
-                        onPatternClick = { component.onPatternClick(it) },
-                        onBookmarkToggle = { patternId ->
-                            viewModel.onEvent(PatternListEvent.OnBookmarkToggle(patternId))
-                        },
-                        onCategoryToggle = { category ->
-                            viewModel.onEvent(PatternListEvent.OnCategoryToggle(category))
-                        }
-                    )
-                }
-
-                is PatternListUiState.Error -> {
-                    ErrorContent(message = state.message)
-                }
-            }
+            )
         }
     }
 }
@@ -174,10 +162,34 @@ private fun ErrorContent(message: String) {
 }
 
 /**
+ * 패턴 목록 컨텐츠 (MainScreen에서 재사용)
+ */
+@Composable
+fun PatternListContent(
+    uiState: PatternListUiState,
+    expandedCategories: Set<PatternCategory>,
+    onPatternClick: (String) -> Unit,
+    onBookmarkToggle: (String) -> Unit,
+    onCategoryToggle: (PatternCategory) -> Unit
+) {
+    when (uiState) {
+        is PatternListUiState.Loading -> LoadingContent()
+        is PatternListUiState.Error -> ErrorContent(uiState.message)
+        is PatternListUiState.Success -> PatternSuccessContent(
+            state = uiState,
+            expandedCategories = expandedCategories,
+            onPatternClick = onPatternClick,
+            onBookmarkToggle = onBookmarkToggle,
+            onCategoryToggle = onCategoryToggle
+        )
+    }
+}
+
+/**
  * 성공 화면 컨텐츠
  */
 @Composable
-private fun SuccessContent(
+private fun PatternSuccessContent(
     state: PatternListUiState.Success,
     expandedCategories: Set<PatternCategory>,
     onPatternClick: (String) -> Unit,

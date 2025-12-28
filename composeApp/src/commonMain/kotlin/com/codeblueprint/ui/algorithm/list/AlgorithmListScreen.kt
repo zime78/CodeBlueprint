@@ -98,29 +98,17 @@ fun AlgorithmListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (val state = uiState) {
-                is AlgorithmListUiState.Loading -> {
-                    LoadingContent()
+            AlgorithmListContent(
+                uiState = uiState,
+                expandedCategories = expandedCategories,
+                onAlgorithmClick = { component.onAlgorithmClick(it) },
+                onBookmarkToggle = { algorithmId ->
+                    viewModel.onEvent(AlgorithmListEvent.OnBookmarkToggle(algorithmId))
+                },
+                onCategoryToggle = { category ->
+                    viewModel.onEvent(AlgorithmListEvent.OnCategoryToggle(category))
                 }
-
-                is AlgorithmListUiState.Success -> {
-                    SuccessContent(
-                        state = state,
-                        expandedCategories = expandedCategories,
-                        onAlgorithmClick = { component.onAlgorithmClick(it) },
-                        onBookmarkToggle = { algorithmId ->
-                            viewModel.onEvent(AlgorithmListEvent.OnBookmarkToggle(algorithmId))
-                        },
-                        onCategoryToggle = { category ->
-                            viewModel.onEvent(AlgorithmListEvent.OnCategoryToggle(category))
-                        }
-                    )
-                }
-
-                is AlgorithmListUiState.Error -> {
-                    ErrorContent(message = state.message)
-                }
-            }
+            )
         }
     }
 }
@@ -156,10 +144,34 @@ private fun ErrorContent(message: String) {
 }
 
 /**
+ * 알고리즘 목록 컨텐츠 (MainScreen에서 재사용)
+ */
+@Composable
+fun AlgorithmListContent(
+    uiState: AlgorithmListUiState,
+    expandedCategories: Set<AlgorithmCategory>,
+    onAlgorithmClick: (String) -> Unit,
+    onBookmarkToggle: (String) -> Unit,
+    onCategoryToggle: (AlgorithmCategory) -> Unit
+) {
+    when (uiState) {
+        is AlgorithmListUiState.Loading -> LoadingContent()
+        is AlgorithmListUiState.Error -> ErrorContent(uiState.message)
+        is AlgorithmListUiState.Success -> AlgorithmSuccessContent(
+            state = uiState,
+            expandedCategories = expandedCategories,
+            onAlgorithmClick = onAlgorithmClick,
+            onBookmarkToggle = onBookmarkToggle,
+            onCategoryToggle = onCategoryToggle
+        )
+    }
+}
+
+/**
  * 성공 화면 컨텐츠
  */
 @Composable
-private fun SuccessContent(
+private fun AlgorithmSuccessContent(
     state: AlgorithmListUiState.Success,
     expandedCategories: Set<AlgorithmCategory>,
     onAlgorithmClick: (String) -> Unit,

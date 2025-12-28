@@ -16,7 +16,7 @@ interface RootComponent {
     val childStack: Value<ChildStack<*, Child>>
 
     sealed class Child {
-        data class PatternList(val component: PatternListComponent) : Child()
+        data class Main(val component: MainComponent) : Child()
         data class PatternDetail(val component: PatternDetailComponent) : Child()
         data class Search(val component: SearchComponent) : Child()
         data class Bookmarks(val component: BookmarksComponent) : Child()
@@ -27,6 +27,18 @@ interface RootComponent {
         data class AlgorithmList(val component: AlgorithmListComponent) : Child()
         data class AlgorithmDetail(val component: AlgorithmDetailComponent) : Child()
     }
+}
+
+/**
+ * 메인 화면 컴포넌트 (탭 기반)
+ */
+interface MainComponent {
+    fun onPatternClick(patternId: String)
+    fun onAlgorithmClick(algorithmId: String)
+    fun onArchitectureClick(architectureId: String)
+    fun onSearchClick()
+    fun onBookmarksClick()
+    fun onSettingsClick()
 }
 
 /**
@@ -132,15 +144,15 @@ class DefaultRootComponent(
     override val childStack: Value<ChildStack<*, RootComponent.Child>> = childStack(
         source = navigation,
         serializer = Config.serializer(),
-        initialConfiguration = Config.PatternList,
+        initialConfiguration = Config.Main,
         handleBackButton = true,
         childFactory = ::createChild
     )
 
     private fun createChild(config: Config, componentContext: ComponentContext): RootComponent.Child {
         return when (config) {
-            is Config.PatternList -> RootComponent.Child.PatternList(
-                DefaultPatternListComponent(componentContext, navigation)
+            is Config.Main -> RootComponent.Child.Main(
+                DefaultMainComponent(componentContext, navigation)
             )
             is Config.PatternDetail -> RootComponent.Child.PatternDetail(
                 DefaultPatternDetailComponent(componentContext, config.patternId, navigation)
@@ -181,7 +193,7 @@ class DefaultRootComponent(
     @Serializable
     sealed class Config {
         @Serializable
-        data object PatternList : Config()
+        data object Main : Config()
 
         @Serializable
         data class PatternDetail(val patternId: String) : Config()
@@ -217,15 +229,23 @@ class DefaultRootComponent(
 }
 
 /**
- * 패턴 목록 컴포넌트 기본 구현
+ * 메인 컴포넌트 기본 구현
  */
-class DefaultPatternListComponent(
+class DefaultMainComponent(
     componentContext: ComponentContext,
     private val navigation: StackNavigation<DefaultRootComponent.Config>
-) : PatternListComponent, ComponentContext by componentContext {
+) : MainComponent, ComponentContext by componentContext {
 
     override fun onPatternClick(patternId: String) {
         navigation.push(DefaultRootComponent.Config.PatternDetail(patternId))
+    }
+
+    override fun onAlgorithmClick(algorithmId: String) {
+        navigation.push(DefaultRootComponent.Config.AlgorithmDetail(algorithmId))
+    }
+
+    override fun onArchitectureClick(architectureId: String) {
+        navigation.push(DefaultRootComponent.Config.ArchitectureDetail(architectureId))
     }
 
     override fun onSearchClick() {
@@ -238,14 +258,6 @@ class DefaultPatternListComponent(
 
     override fun onSettingsClick() {
         navigation.push(DefaultRootComponent.Config.Settings)
-    }
-
-    override fun onArchitectureClick() {
-        navigation.push(DefaultRootComponent.Config.ArchitectureList)
-    }
-
-    override fun onAlgorithmClick() {
-        navigation.push(DefaultRootComponent.Config.AlgorithmList)
     }
 }
 

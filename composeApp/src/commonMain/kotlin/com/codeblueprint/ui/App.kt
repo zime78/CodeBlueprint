@@ -13,9 +13,9 @@ import com.codeblueprint.ui.algorithm.list.AlgorithmListScreen
 import com.codeblueprint.ui.architecture.ArchitectureDetailScreen
 import com.codeblueprint.ui.architecture.ArchitectureListScreen
 import com.codeblueprint.ui.bookmarks.BookmarksScreen
+import com.codeblueprint.ui.main.MainScreen
 import com.codeblueprint.ui.navigation.RootComponent
 import com.codeblueprint.ui.pattern.detail.PatternDetailScreen
-import com.codeblueprint.ui.pattern.list.PatternListScreen
 import com.codeblueprint.ui.playground.CodePlaygroundScreen
 import com.codeblueprint.ui.search.SearchScreen
 import com.codeblueprint.ui.settings.SettingsScreen
@@ -37,8 +37,8 @@ fun App(
             animation = stackAnimation(fade() + scale())
         ) { child ->
             when (val instance = child.instance) {
-                is RootComponent.Child.PatternList -> {
-                    PatternListScreen(
+                is RootComponent.Child.Main -> {
+                    MainScreen(
                         component = instance.component
                     )
                 }
